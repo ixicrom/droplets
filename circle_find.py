@@ -9,7 +9,6 @@ import matplotlib.pyplot as pl
 imFile = '/Users/s1101153/Desktop/Emily/SUM_2014_6_2-T2M_6_63xoil_2.tif'
 imArr = io.imread(imFile)
 
-imArr.shape
 imGreen=imArr[:,:,0]
 imRed=imArr[:,:,2]
 
