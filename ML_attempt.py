@@ -1,6 +1,8 @@
 from slice_tools import slice_image
 import os
 import pandas as pd
+from sklearn import cluster
+
 def make_files():
     filePath='/Users/s1101153/Dropbox/Emily/'
     datFile=filePath+'z-stack_info.csv'
@@ -42,22 +44,24 @@ def read_files(folderName):
 
 def main():
     # make_files()
-
     dat=read_files("/Users/s1101153/Dropbox/Emily/slices/")
-    print(dat.head())
+    print(dat)
+    dat = dat.dropna()
 
+    kmeans=cluster.KMeans().fit(dat)
+    print(kmeans)
 main()
-dat=pd.read_pickle('/Users/s1101153/Dropbox/Emily/slices/SUM_2014_5_30-T3M_7_63xoil_1.tif_slice0')
-print(dat)
-folderName="/Users/s1101153/Dropbox/Emily/slices/"
-test_file='SUM_2014_5_30-T3M_7_63xoil_1.tif_slice0'
-start1=test_file.find("T")
-end1=test_file.find("_63xoil")
-part1=test_file[start1:end1]
-start2=end1+7
-end2=start2+2
-part2=test_file[start2:end2]
-start3=test_file.find(".tif")+4
-part3=test_file[start3:]
-test_file=part1+part2+part3
-test_file
+# dat=pd.read_pickle('/Users/s1101153/Dropbox/Emily/slices/SUM_2014_5_30-T3M_7_63xoil_1.tif_slice0')
+# print(dat)
+# folderName="/Users/s1101153/Dropbox/Emily/slices/"
+# test_file='SUM_2014_5_30-T3M_7_63xoil_1.tif_slice0'
+# start1=test_file.find("T")
+# end1=test_file.find("_63xoil")
+# part1=test_file[start1:end1]
+# start2=end1+7
+# end2=start2+2
+# part2=test_file[start2:end2]
+# start3=test_file.find(".tif")+4
+# part3=test_file[start3:]
+# test_file=part1+part2+part3
+# test_file
