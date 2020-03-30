@@ -49,7 +49,7 @@ def slice_image(imFile, um, L, C_x_um, C_y_um, n_slices, saveFile=False):
         points.columns=['r','theta','val_green','val_red']
         slices.append(points)
         if saveFile:
-            saveName=imFile+"_slice"+str(slice)
+            saveName=imFile+"_slice"+str(slice)+".pkl"
             points.to_pickle(saveName)
 
     return slices
