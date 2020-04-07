@@ -3,6 +3,8 @@ import numpy as np
 import math
 import pandas as pd
 import matplotlib.pyplot as pl
+import os
+import glob
 
 
 def slice_image(imFile, um, L, C_x_um, C_y_um, n_slices, saveFile=False):
@@ -72,3 +74,44 @@ def slices_plot(n_slices, plot_name, slices):
         pl.title("Slice "+str(slice+1))
         pl.savefig(green_file)
         pl.close()
+
+def slice_all(datFile, filePath, save=False):
+    f=open(datFile, 'r')
+    all_slices=[]
+    for line in f.readlines():
+        if line.startswith("SUM"):
+            vals=line.split(",")
+            fileName = filePath+vals[0]
+            umSize=float(vals[1])
+            pxSize=int(vals[2])
+            Cx=float(vals[4])
+            Cy=float(vals[3])
+            n_slice = 12
+            im_slices=slice_image(fileName, umSize, pxSize, Cx, Cy, n_slice, save)
+            all_slices.append(im_slices)
+    return all_slices
+
+
+def read_files(folderName):
+    search=os.path.join(folderName, "*.pkl")
+    file_names=glob.glob(search)#folderName+x for x in os.listdir(folderName)]
+    dat=[]
+    keys=[]
+    for file in file_names:
+        entry=pd.read_pickle(file) #actually reading the file
+        dat.append(entry)
+        # making nice column names_______
+        start1=file.find("T")
+        end1=file.find("_63xoil")
+        part1=file[start1:end1]
+        start2=end1+7
+        end2=start2+2
+        part2=file[start2:end2]
+        start3=file.find(".tif")+4
+        part3=file[start3:]
+        key=part1+part2+part3
+        keys.append(str(key))
+        # ________________________________
+    # print([x for x in keys if keys.count(x) >= 2])
+    dat_df=pd.concat(dat, axis=1, keys=keys) #axis=1 for side-by-side. will do multi-layer column names
+    return dat_df
