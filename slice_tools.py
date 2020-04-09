@@ -99,6 +99,7 @@ def read_files(folderName):
     keys=[]
     for file in file_names:
         entry=pd.read_pickle(file) #actually reading the file
+        entry.columns.names=['vars']
         dat.append(entry)
         # making nice column names_______
         start1=file.find("T")
@@ -113,5 +114,5 @@ def read_files(folderName):
         keys.append(str(key))
         # ________________________________
     # print([x for x in keys if keys.count(x) >= 2])
-    dat_df=pd.concat(dat, axis=1, keys=keys) #axis=1 for side-by-side. will do multi-layer column names
+    dat_df=pd.concat(dat, axis=1, keys=keys, names=['slices']) #axis=1 for side-by-side. will do multi-layer column names
     return dat_df
