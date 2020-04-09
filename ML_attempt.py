@@ -10,21 +10,20 @@ def main():
     dat=read_files(filePath)
     dat = dat.dropna()
     dat=dat.transpose()
+    dat_means=dat.groupby([('T6M_29_1_slice5.pkl','r')]).mean()
+    dat_means
+    idx=pd.IndexSlice
+    dat_mean_green=dat_means.loc[:,idx[:,'val_green']]
+    dat_mean_green=dat_mean_green.droplevel(1,axis=1)
+    dat_mean_green.index.name='r'
+    dat_mean_green
+    dat_arr=dat_mean_green.transpose().to_numpy()
+    dat_arr.shape
 
-    dat=dat.to_numpy()
-    dat.shape
+    kmeans=cluster.KMeans().fit(dat_arr)
 
-    # type(dat)
-    # type(dat[0])
-    big_array=np.full((108,4,24400), np.nan)
-    for i in range(108):
-        j=i*4
-        little_array=dat[j:j+4, :]
-        big_array[i,]=little_array
-
-    kmeans=cluster.KMeans(n_clusters=8).fit(big_array[:,3,:])
     labs=kmeans.labels_
     len(labs)
-    np.savetxt('test.txt',np.asarray(labs))
+    np.savetxt('test_2020-04-09.txt',np.asarray(labs))
 
 main()
