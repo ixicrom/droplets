@@ -9,7 +9,7 @@ def main():
 
     dat=read_files(filePath)
     dat = dat.dropna()
-    dat=dat.transpose()
+    # dat=dat.transpose()
     dat_means=dat.groupby([('T6M_29_1_slice5.pkl','r')]).mean()
     dat_means
     idx=pd.IndexSlice
@@ -20,10 +20,19 @@ def main():
     dat_arr=dat_mean_green.transpose().to_numpy()
     dat_arr.shape
 
-    kmeans=cluster.KMeans().fit(dat_arr)
+    np.random.seed(1234)
+    kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
 
-    labs=kmeans.labels_
-    len(labs)
-    np.savetxt('test_2020-04-09.txt',np.asarray(labs))
+    pred = kmeans.predict(dat_mean_green.transpose())
+    pred
+    dat_final_g = dat_mean_green.transpose()
+    dat_final_g
+    dat_final_g['Cluster'] = pd.Series(pred, index = dat_final_g.index)
+    dat_print_g=dat_final_g['Cluster'].sort_index()
+    # labs=kmeans.labels_
+    # labs
+    # len(labs)
+    # np.savetxt('test_2020-04-14.txt',np.asarray(labs))
+    dat_print_g.to_csv('test_2020-04-14_9clusters.csv', header=False)
 
 main()
