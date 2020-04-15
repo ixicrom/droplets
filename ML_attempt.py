@@ -3,16 +3,16 @@ from sklearn import cluster
 
 
 def main():
+    # read in files and drop NAs
     filePath='/Users/s1101153/Dropbox/Emily/'
-    # datFile=filePath+'z-stack_info.csv'
-    # slice_all(datFile, filePath, save=True)
-
     dat=read_files(filePath)
     dat = dat.dropna()
-    # dat=dat.transpose()
+
+    # remove a dimension by averaging over theta
     dat_means=dat.groupby([('T6M_29_1_slice5.pkl','r')]).mean()
-    dat_means
     idx=pd.IndexSlice
+
+    # take the green pixel values
     dat_mean_green=dat_means.loc[:,idx[:,'val_green']]
     dat_mean_green=dat_mean_green.droplevel(1,axis=1)
     dat_mean_green.index.name='r'
