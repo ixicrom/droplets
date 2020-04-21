@@ -76,8 +76,9 @@ def main():
 
 
 
-    Z = linkage(dat_final, method='ward', optimal_ordering=False)
-    Z
-    dendrogram(Z, labels=dat_final.index)
+    Z = linkage(dat_final, method='ward', optimal_ordering=True)
+    mydendro = dendrogram(Z, labels=dat_final.index, truncate_mode='lastp')
     plt.show()
+    
+
 main()
