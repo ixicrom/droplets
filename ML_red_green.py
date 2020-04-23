@@ -1,6 +1,3 @@
-
-
-
 from slice_tools import *
 from sklearn import cluster
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -35,50 +32,63 @@ def main():
     filePath='/Users/s1101153/Dropbox/Emily/'
     dat=read_files(filePath)
     dat = dat.dropna()
+    # dat
 
     # remove a dimension by averaging over theta
     dat_means=dat.groupby([('T6M_29_1_slice5.pkl','r')]).mean() #group by r for one of the slices, doesn't matter which one as they are all the same
     idx=pd.IndexSlice
+    # dat_means
 
     # take the green pixel values
     dat_mean_green=dat_means.loc[:,idx[:,'val_green']]
     dat_mean_green.index.name='r'
-    dat_mean_green
+    # dat_mean_green
 
     dat_mean_red = dat_means.loc[:,idx[:,'val_red']]
     dat_mean_red.index.name='r'
-    dat_mean_red
+    # dat_mean_red
 
     dat_all = pd.concat([dat_mean_green, dat_mean_red], axis=1)
     dat_all.transpose().index
     dat_arr = dat_all.transpose().to_numpy()
     dat_arr.shape
-    dat_final = dat_all.transpose()
+    dat_forLearning = dat_all.transpose()
+    # dat_forLearning
 
+# k-means clustering
     np.random.seed(1234)
-    # kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
-    # pred = kmeans.predict(dat_final
-    # pred
-    # dat_final['Cluster'] = pd.Series(pred, index = dat_final.index)
-    # dat_print=dat_final['Cluster'].sort_index()
-    # labs=kmeans.labels_
-    # labs
-    # len(labs)
-    # np.savetxt('test_2020-04-14.txt',np.asarray(labs))
-    # dat_print.to_csv('test_2020-04-17.csv', header=False)
+    kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
+    pred = kmeans.predict(dat_forLearning)
+    pred
+    clusters = pd.Series(pred, index = dat_forLearning.index, name='Cluster')
+    clusters
+    dat_results = pd.concat([dat_forLearning, clusters], axis=1)
+    dat_results = dat_results.set_index('Cluster', append = True)
 
+    dat_toPlot = dat_results.stack().reset_index()
+    dat_toPlot.columns = ['slices', 'colour', 'cluster', 'r', 'value']
+
+
+    labs=kmeans.labels_
+    labs
+    len(labs)
+    dat_toPlot.to_csv('toPlot_2020-04-23.csv', header=True)
+
+
+# hierarchical clustering and plotting with sklearn (doesn't currently work)
+    # np.random.seed(1234)
     # h_cluster = cluster.AgglomerativeClustering(distance_threshold=0, n_clusters=None).fit(dat_arr)
-
+    #
     # plt.title('Hierarchical Clustering Dendrogram')
     # plot_dendrogram(h_cluster)
     # plt.xlabel("Number of points in node (or index of point if no parenthesis).")
     # plt.show()
 
+# working hierarchical clustering with skcipy linkage, and plot
+    # np.random.seed(1234)
+    # Z = linkage(dat_final, method='ward', optimal_ordering=True)
+    # mydendro = dendrogram(Z, labels=dat_final.index, truncate_mode='lastp')
+    # plt.show()
 
-
-    Z = linkage(dat_final, method='ward', optimal_ordering=True)
-    mydendro = dendrogram(Z, labels=dat_final.index, truncate_mode='lastp')
-    plt.show()
-    
 
 main()
