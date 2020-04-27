@@ -1,5 +1,5 @@
 from slice_tools import *
-from sklearn import cluster
+from sklearn import cluster, preprocessing
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
 from scipy.cluster.hierarchy import dendrogram, linkage
@@ -32,11 +32,21 @@ def main():
     filePath='/Users/s1101153/Dropbox/Emily/'
     dat=read_files(filePath)
     dat = dat.dropna()
-    # dat
+    idx=pd.IndexSlice
+
+# rescale the data______________________________________________
+    x = dat.loc[:,idx[:,['val_green','val_red']]]
+    x.shape
+    min_max_scaler = preprocessing.MinMaxScaler()
+    x_scaled = min_max_scaler.fit_transform(x)
+    pd.DataFrame(x_scaled).describe()
+    dat.loc[:,idx[:,['val_green','val_red']]] = x_scaled
+    dat
+# ____________________________________________________________
+
 
     # remove a dimension by averaging over theta
     dat_means=dat.groupby([('T6M_29_1_slice5.pkl','r')]).mean() #group by r for one of the slices, doesn't matter which one as they are all the same
-    idx=pd.IndexSlice
     # dat_means
 
     # take the green pixel values
@@ -66,13 +76,13 @@ def main():
     dat_results = dat_results.set_index('Cluster', append = True)
 
     dat_toPlot = dat_results.stack().reset_index()
-    dat_toPlot.columns = ['slices', 'colour', 'cluster', 'r', 'value']
-
+    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
+    dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
 
     labs=kmeans.labels_
     labs
     len(labs)
-    dat_toPlot.to_csv('toPlot_2020-04-23.csv', header=True)
+    dat_toPlot.to_csv('2020-04-23_scaledVals.csv', header=True)
 
 
 # hierarchical clustering and plotting with sklearn (doesn't currently work)
