@@ -2,8 +2,7 @@ from slice_tools import *
 from sklearn import cluster, preprocessing
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
-from scipy.cluster.hierarchy import dendrogram, linkage
-
+from scipy.cluster import hierarchy
 
 # def plot_dendrogram(model, **kwargs):
 #     # Create linkage matrix and then plot the dendrogram
@@ -65,25 +64,25 @@ def main():
     dat_forLearning = dat_all.transpose()
     # dat_forLearning
 
-# k-means clustering
-    np.random.seed(1234)
-    kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
-    pred = kmeans.predict(dat_forLearning)
-    pred
-    clusters = pd.Series(pred, index = dat_forLearning.index, name='Cluster')
-    clusters
-    dat_results = pd.concat([dat_forLearning, clusters], axis=1)
-    dat_results = dat_results.set_index('Cluster', append = True)
-
-    dat_toPlot = dat_results.stack().reset_index()
-    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
-    dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
-
-    labs=kmeans.labels_
-    labs
-    len(labs)
-    dat_toPlot.to_csv('2020-04-23_scaledVals.csv', header=True)
-
+# k-means clustering___________________________________________
+    # np.random.seed(1234)
+    # kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
+    # pred = kmeans.predict(dat_forLearning)
+    # pred
+    # clusters = pd.Series(pred, index = dat_forLearning.index, name='Cluster')
+    # clusters
+    # dat_results = pd.concat([dat_forLearning, clusters], axis=1)
+    # dat_results = dat_results.set_index('Cluster', append = True)
+    #
+    # dat_toPlot = dat_results.stack().reset_index()
+    # dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
+    # dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
+    #
+    # labs=kmeans.labels_
+    # labs
+    # len(labs)
+    # dat_toPlot.to_csv('2020-04-27_scaledVals.csv', header=True)
+# ____________________________________________________________
 
 # hierarchical clustering and plotting with sklearn (doesn't currently work)
     # np.random.seed(1234)
@@ -93,12 +92,20 @@ def main():
     # plot_dendrogram(h_cluster)
     # plt.xlabel("Number of points in node (or index of point if no parenthesis).")
     # plt.show()
+# ____________________________________________________________
 
-# working hierarchical clustering with skcipy linkage, and plot
-    # np.random.seed(1234)
-    # Z = linkage(dat_final, method='ward', optimal_ordering=True)
-    # mydendro = dendrogram(Z, labels=dat_final.index, truncate_mode='lastp')
-    # plt.show()
+# working hierarchical clustering with skcipy linkage, and plot____
+    np.random.seed(1234)
+    Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
+    mydendro = dendrogram(Z, labels=dat_forLearning.index)
+    plt.show()
+    Z_tree = hierarchy.to_tree(Z)
+    Z_cut = hierarchy.cut_tree(Z)
+    Z_leaves = hierarchy.leaves_list(Z)
+    Z_leaves=dat_forLearning.index[Z_leaves]
+    type(Z_leaves)
+    Z_leaves.to_frame().to_csv('test4.csv')
 
+# _________________________________________________________________
 
 main()
