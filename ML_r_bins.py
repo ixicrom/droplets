@@ -4,6 +4,8 @@ from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
 import math
+from datetime import datetime
+
 
 # def plot_dendrogram(model, **kwargs):
 #     # Create linkage matrix and then plot the dendrogram
@@ -29,18 +31,21 @@ import math
 
 def main():
     # read in files and drop NAs
+    norm = False
     filePath='/Users/s1101153/Dropbox/Emily/'
     dat=read_files(filePath)
     dat = dat.dropna()
     idx=pd.IndexSlice
 
 # rescale the data______________________________________________
-    x = dat.loc[:,idx[:,['val_green','val_red']]]
-    x.shape
-    min_max_scaler = preprocessing.MinMaxScaler()
-    x_scaled = min_max_scaler.fit_transform(x)
-    # pd.DataFrame(x_scaled).describe()
-    dat.loc[:,idx[:,['val_green','val_red']]] = x_scaled
+    if(input('Normalise the data? (y/n): ')=='y'):
+        norm = True
+        x = dat.loc[:,idx[:,['val_green','val_red']]]
+        x.shape
+        min_max_scaler = preprocessing.MinMaxScaler()
+        x_scaled = min_max_scaler.fit_transform(x)
+        # pd.DataFrame(x_scaled).describe()
+        dat.loc[:,idx[:,['val_green','val_red']]] = x_scaled
     # dat
 # ____________________________________________________________
 
@@ -65,32 +70,25 @@ def main():
 
 
 # average over groups of 20 r values to bin data
-    N = 10
+    N = int(input('How many r values to average over: '))
+    print(N)
     dat_r_bins = dat_all.groupby(np.arange(len(dat_all))//N).mean()
     dat_r_bins
     dat_forLearning = dat_r_bins.transpose()
-
+    # dat_forLearning
 
 # k-means clustering___________________________________________
-    # np.random.seed(1234)
-    # kmeans=cluster.KMeans(n_clusters=9).fit(dat_forLearning)
-    # # pred = kmeans.predict(dat_forLearning)
-    # # pred
-    # labs=kmeans.labels_
+    np.random.seed(1234)
+    kmeans=cluster.KMeans(n_clusters=9).fit(dat_forLearning)
+    # pred = kmeans.predict(dat_forLearning)
+    # pred
+    labs=kmeans.labels_
     # labs
-    # len(labs)
-    #
-    # clusters = pd.Series(labs, index = dat_forLearning.index, name='Cluster')
-    # clusters
-    # dat_results = pd.concat([dat_forLearning, clusters], axis=1)
-    # dat_results = dat_results.set_index('Cluster', append = True)
-    #
-    # dat_toPlot = dat_results.stack().reset_index()
-    # dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
-    # dat_toPlot['Sample'] = dat_toPlot['Slice'].str.slice(0,8)
-    #
-    #
-    # dat_toPlot.to_csv('2020-04-29_av10r.csv', header=True)
+    len(labs)
+
+    k_clusters = pd.Series(labs, index = dat_forLearning.index, name='Cluster_kmeans')
+    # k_clusters
+
 # ____________________________________________________________
 
 # hierarchical clustering and plotting with sklearn (doesn't currently work)
@@ -108,14 +106,49 @@ def main():
     Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
     mydendro = dendrogram(Z, labels=dat_forLearning.index, truncate_mode='lastp')
     plt.show()
+    cut_num = int(input("Number of clusters to cut into (if in doubt, choose 9): "))
     # Z_tree = hierarchy.to_tree(Z)
-    # Z_cut = hierarchy.cut_tree(Z)
-
+    Z_cut = hierarchy.cut_tree(Z, n_clusters = cut_num)
+    # Z_cut
     # get the leaf labels out and print to a file
     Z_leaves = hierarchy.leaves_list(Z)
     Z_leaves=dat_forLearning.index[Z_leaves]
+    Z_results = pd.DataFrame([Z_leaves, Z_cut]).transpose()
+    # Z_results
+
+    images = Z_results[0].values
+    slices = [x[0] for x in images]
+    colours = [x[1] for x in images]
+    Z_clusters = Z_results[1].values
+    clusters_h = [x[0] for x in Z_clusters]
+    Z_results[1] = clusters_h
+    Z_results.index = [slices, colours]
+    Z_results.columns = ['Image','Cluster_hier']
+    # Z_results
+    Z_results = Z_results.drop(columns='Image')
+    # Z_results
     # Z_leaves.to_frame().to_csv('/Users/s1101153/Dropbox/Emily/Graphs/2020-04-29_leaves_av10r.csv')
 
 # _________________________________________________________________
 
+
+# data manipulation for output
+    dat_results = pd.concat([dat_forLearning, k_clusters, Z_results], axis=1)
+    dat_results = dat_results.set_index('Cluster_kmeans', append = True)
+    dat_results = dat_results.set_index('Cluster_hier', append=True)
+    # dat_results
+    dat_toPlot = dat_results.stack().reset_index()
+    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster_kmeans', 'Cluster_hier', 'r', 'Value']
+    dat_toPlot['Sample'] = dat_toPlot['Slice'].str.slice(0,8)
+    dat_toPlot
+
+    date = datetime.today().strftime('%Y-%m-%d')
+    if norm:
+        fileName = date + '_k_h_av' + str(N) + 'r' + str(cut_num) + 'h-clusters.csv'
+    else:
+        fileName = date + '_un-norm_k_h_av' + str(N) +'r_' + str(cut_num) + 'h-clusters.csv'
+    filePath = '/Users/s1101153/Dropbox/Emily/Results/'
+    outFile = filePath+fileName
+    dat_toPlot.to_csv(outFile, header=True)
+    print('File saved: '+outFile)
 main()
