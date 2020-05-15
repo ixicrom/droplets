@@ -9,6 +9,7 @@ from skimage import io
 import math
 from scipy.signal import correlate2d
 from sklearn import cluster, preprocessing
+from datetime import datetime
 
 
 # def r_average(data):
@@ -77,8 +78,10 @@ def main():
         print(i)
         slice_df = dat.loc[:,name]
         num_r = int(len(slice_df)/100)
-        im_g = im_r = np.zeros((num_r,100))
-        r = t = 0
+        im_g = np.zeros((num_r,100))
+        im_r = np.zeros((num_r,100))
+        r, t = 0, 0
+
         slice_df['val_green'][0]
         for j in range(len(slice_df)):
             im_g[r,t]=slice_df['val_green'][j]
@@ -88,10 +91,9 @@ def main():
                 r = r+1
             else:
                 t = t+1
-        im_r.shape
         # pl.imshow(im_r)
         ac3_r = correlate2d(im_r,im_r)
-        # pl.imshow(ac3_r)
+        # pl.imshow(im_g)
         # autoCorr_r = r_average(ac3_r)
         ac3_r.shape
         ac3_g = correlate2d(im_g,im_g)
@@ -105,29 +107,40 @@ def main():
         if i==1:
             print(ACF)
 
-    ACF.transpose()
+    ACF = ACF.transpose()
+    ACF.index = pd.MultiIndex.from_tuples(ACF.index)
+
     np.random.seed(1234)
-    kmeans=cluster.KMeans().fit(ACF.transpose())
-    labs = pd.DataFrame(kmeans.labels_)
+    kmeans=cluster.KMeans().fit(ACF)
+    labs = pd.Series(kmeans.labels_, index = ACF.index, name='Cluster')
 
-    ACF.index
-
-    dat_results = pd.concat([ACF.transpose(), labs], axis=0)
+    dat_results = pd.concat([ACF, labs], axis=1)
     dat_results = dat_results.set_index('Cluster', append = True)
-    dat_results
 
     dat_toPlot = dat_results.stack().reset_index()
-    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
-    dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
+    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'ACF_index', 'Value']
+    dat_toPlot['Sample'] = dat_toPlot['Slice'].str.slice(0,8)
 
-    dat_toPlot.to_csv('2020-04-27_scaledVals.csv', header=True)
+    date = datetime.today().strftime('%Y-%m-%d')
+    filePath = '/Users/s1101153/Dropbox/Emily/Results/'
+
+    # fileName = date + 'ACF-clusters.csv'
+    # outFile = filePath+fileName
+    # dat_toPlot.to_csv(outFile, header=True)
+    # print('File saved: '+outFile)
 
 
-    ACF['T6M_29_1_slice5.pkl red'].describe()
-    ACF['T3M_7_1_slice8.pkl red'].describe()
-    pl.plot(ACF['T3M_7_1_slice8.pkl red'])
-    pl.plot(ACF['T6M_29_1_slice5.pkl red'])
-    pl.show()
+    fileShort = date + '_ACF_clusters_only.csv'
+    out2 = filePath + fileShort
+    dat_clusters = dat_toPlot.drop(['ACF_index','Value'], axis='columns').drop_duplicates()
+    dat_clusters = dat_clusters.reset_index(drop=True)
+    dat_clusters.to_csv(out2, header=True)
+    print('File saved: '+out2)
+
+
 main()
-
-correlate2d(im_r, im_r)
+ACF['T6M_29_1_slice5.pkl red'].describe()
+ACF['T3M_7_1_slice8.pkl red'].describe()
+pl.plot(ACF['T3M_7_1_slice8.pkl red'])
+pl.plot(ACF['T6M_29_1_slice5.pkl red'])
+pl.show()
