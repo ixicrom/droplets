@@ -62,26 +62,27 @@ def main():
     dat_arr = dat_all.transpose().to_numpy()
     dat_arr.shape
     dat_forLearning = dat_all.transpose()
-    # dat_forLearning
+    dat_forLearning
 
 # k-means clustering___________________________________________
-    # np.random.seed(1234)
-    # kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
-    # pred = kmeans.predict(dat_forLearning)
-    # pred
-    # clusters = pd.Series(pred, index = dat_forLearning.index, name='Cluster')
-    # clusters
-    # dat_results = pd.concat([dat_forLearning, clusters], axis=1)
-    # dat_results = dat_results.set_index('Cluster', append = True)
-    #
-    # dat_toPlot = dat_results.stack().reset_index()
-    # dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
-    # dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
-    #
-    # labs=kmeans.labels_
-    # labs
-    # len(labs)
-    # dat_toPlot.to_csv('2020-04-27_scaledVals.csv', header=True)
+    np.random.seed(1234)
+    kmeans=cluster.KMeans(n_clusters=9).fit(dat_arr)
+    pred = kmeans.predict(dat_forLearning)
+    pred
+    clusters = pd.Series(pred, index = dat_forLearning.index, name='Cluster')
+    clusters
+    dat_results = pd.concat([dat_forLearning, clusters], axis=1)
+    dat_results
+    dat_results = dat_results.set_index('Cluster', append = True)
+
+    dat_toPlot = dat_results.stack().reset_index()
+    dat_toPlot.columns = ['Slice', 'Colour', 'Cluster', 'r', 'Value']
+    dat_toPlot['Sample'] = dat_toPlot['slice'].str.slice(0,8)
+
+    labs=kmeans.labels_
+    labs
+    len(labs)
+    dat_toPlot.to_csv('2020-04-27_scaledVals.csv', header=True)
 # ____________________________________________________________
 
 # hierarchical clustering and plotting with sklearn (doesn't currently work)
@@ -95,16 +96,16 @@ def main():
 # ____________________________________________________________
 
 # working hierarchical clustering with skcipy linkage, and plot____
-    np.random.seed(1234)
-    Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
-    mydendro = dendrogram(Z, labels=dat_forLearning.index)
-    plt.show()
-    Z_tree = hierarchy.to_tree(Z)
-    Z_cut = hierarchy.cut_tree(Z)
-    Z_leaves = hierarchy.leaves_list(Z)
-    Z_leaves=dat_forLearning.index[Z_leaves]
-    type(Z_leaves)
-    Z_leaves.to_frame().to_csv('test4.csv')
+    # np.random.seed(1234)
+    # Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
+    # mydendro = dendrogram(Z, labels=dat_forLearning.index)
+    # plt.show()
+    # Z_tree = hierarchy.to_tree(Z)
+    # Z_cut = hierarchy.cut_tree(Z)
+    # Z_leaves = hierarchy.leaves_list(Z)
+    # Z_leaves=dat_forLearning.index[Z_leaves]
+    # type(Z_leaves)
+    # Z_leaves.to_frame().to_csv('test4.csv')
 
 # _________________________________________________________________
 

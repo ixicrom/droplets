@@ -46,8 +46,16 @@ def main():
         x_scaled = min_max_scaler.fit_transform(x)
         # pd.DataFrame(x_scaled).describe()
         dat.loc[:,idx[:,['val_green','val_red']]] = x_scaled
-    # dat
+    dat
 # ____________________________________________________________
+
+
+    plt.scatter(x,y,c=valr, cmap='Reds')
+    plt.xlabel("r (pixels)")
+    plt.ylabel("theta (rad)")
+    plt.title("Slice 3")
+    plt.savefig("T2M_6_1_slice3_norm_r.png")
+    plt.close()
 
 
     # remove a dimension by averaging over theta
