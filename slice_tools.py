@@ -92,7 +92,7 @@ def slice_all(datFile, filePath, save=False):
     return all_slices
 
 
-def read_files(folderName):
+def read_files(folderName, dropNans = True):
     search=os.path.join(folderName, "*.pkl")
     file_names=glob.glob(search)#folderName+x for x in os.listdir(folderName)]
     dat=[]
@@ -115,4 +115,6 @@ def read_files(folderName):
         # ________________________________
     # print([x for x in keys if keys.count(x) >= 2])
     dat_df=pd.concat(dat, axis=1, keys=keys, names=['slices']) #axis=1 for side-by-side. will do multi-layer column names
+    if dropNans:
+        dat_df = dat_df.dropna()
     return dat_df
