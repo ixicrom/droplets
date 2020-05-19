@@ -3,7 +3,7 @@ from sklearn import preprocessing
 from scipy.cluster.hierarchy import dendrogram, linkage
 import matplotlib.pyplot as plt
 from scipy.cluster import hierarchy
-
+import numpy as np
 
 def norm_data(data, colms = ['val_green','val_red']):
     idx=pd.IndexSlice
@@ -56,3 +56,28 @@ def h_cluster(dat_forLearning, cut_num, showPlot = True):
     Z_results.columns = ['Image','Cluster_hier']
     Z_results = Z_results.drop(columns='Image')
     return Z_results
+
+
+def count_clusters(dat, grouper1, grouper2, counter):
+    '''
+    Takes in a dataframe dat
+    For each combination of grouper1 and grouper2, makes a single entry
+    Removes all columns apart from the combined entry and the counter column
+    The counter column is the one that we want to know the frequency of
+    For each entry, counts the frequency of the counter variable
+    Returns a #entry x #counter dataframe, with frequency in each slot
+    '''
+
+    dat['Entry'] = dat[grouper1] + dat[grouper2]
+
+    dat_small = dat[['Entry', counter]]
+    dat_small['MergedID'] = dat_small[counter].apply(str)+dat_small['Entry']
+
+    counts = np.unique(dat_small['MergedID'], return_counts=True)
+    dat_sorted = dat_small.sort_values(['MergedID']).drop_duplicates().reset_index(drop=True)
+    dat_sorted = dat_sorted.drop('MergedID', axis='columns')
+    dat_sorted['count'] = counts[1]
+
+    cluster_count = dat_sorted.pivot(index='Cluster', columns='Entry').fillna(0)
+
+    return(cluster_count)
