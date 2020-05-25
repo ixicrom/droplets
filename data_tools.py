@@ -78,6 +78,6 @@ def count_clusters(dat, grouper1, grouper2, counter):
     dat_sorted = dat_sorted.drop('MergedID', axis='columns')
     dat_sorted['count'] = counts[1]
 
-    cluster_count = dat_sorted.pivot(index='Cluster', columns='Entry').fillna(0)
+    cluster_count = dat_sorted.pivot(index=counter, columns='Entry').fillna(0)
 
     return(cluster_count)
