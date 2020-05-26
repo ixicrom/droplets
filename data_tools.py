@@ -58,7 +58,7 @@ def h_cluster(dat_forLearning, cut_num, showPlot = True):
     return Z_results
 
 
-def count_clusters(dat, grouper1, grouper2, counter):
+def count_clusters(dat, counter, grouper1, grouper2="Null"):
     '''
     Takes in a dataframe dat
     For each combination of grouper1 and grouper2, makes a single entry
@@ -67,8 +67,10 @@ def count_clusters(dat, grouper1, grouper2, counter):
     For each entry, counts the frequency of the counter variable
     Returns a #entry x #counter dataframe, with frequency in each slot
     '''
-
-    dat['Entry'] = dat[grouper1] + dat[grouper2]
+    if grouper2 == "Null":
+        dat['Entry'] = dat[grouper1]
+    else:
+        dat['Entry'] = dat[grouper1] + dat[grouper2]
 
     dat_small = dat[['Entry', counter]]
     dat_small['MergedID'] = dat_small[counter].apply(str)+dat_small['Entry']
