@@ -10,13 +10,13 @@ from scipy.signal import correlate2d
 from sklearn import cluster, preprocessing
 from datetime import datetime
 
-def r_average(data):
-    y, x = np.indices((data.shape))
-    tbin = np.bincount(x.ravel(),data.ravel())
-    nx = np.bincount(x.ravel())
-    rav = tbin/nx
-    rav = rav[:int(len(x)/2)]
-    return rav
+# def r_average(data):
+#     y, x = np.indices((data.shape))
+#     tbin = np.bincount(x.ravel(),data.ravel())
+#     nx = np.bincount(x.ravel())
+#     rav = tbin/nx
+#     rav = rav[:int(len(x)/2)]
+#     return rav
 
 
 def main():
@@ -63,9 +63,9 @@ def main():
         # pl.imshow(ac3_g)
         # r_average(ac3_g)[:100]
 
-        ACF[index_r]=r_average(ac3_r)[:100]
+        ACF[index_r]=np.mean(ac3_r[:244, 99:102])
 
-        ACF[index_g]=r_average(ac3_g)[:100]
+        ACF[index_g]=np.mean(ac3_g[:244, 99:102])
 
 
     ACF = ACF.transpose()
@@ -91,17 +91,17 @@ def main():
     print('File saved: '+outFile)
 
 
-    # fileName = date + '_ACF_clusters_1d-av.csv'
-    # out2 = filePath + fileName
-    # # dat_clusters = dat_toPlot.drop(['ACF_index','Value'], axis='columns').drop_duplicates()
-    # # dat_clusters = dat_clusters.reset_index(drop=True)
-    # # dat_clusters.to_csv(out2, header=True)
-    # print('File saved: '+out2)
+    fileName = date + '_ACF_clusters_3pt-av.csv'
+    out2 = filePath + fileName
+    # dat_clusters = dat_toPlot.drop(['ACF_index','Value'], axis='columns').drop_duplicates()
+    # dat_clusters = dat_clusters.reset_index(drop=True)
+    # dat_clusters.to_csv(out2, header=True)
+    print('File saved: '+out2)
 
 
 main()
-ACF['T6M_29_1_slice5.pkl red'].describe()
-ACF['T3M_7_1_slice8.pkl red'].describe()
-pl.plot(ACF['T3M_7_1_slice8.pkl red'])
-pl.plot(ACF['T6M_29_1_slice5.pkl red'])
-pl.show()
+# ACF['T6M_29_1_slice5.pkl red'].describe()
+# ACF['T3M_7_1_slice8.pkl red'].describe()
+# pl.plot(ACF['T3M_7_1_slice8.pkl red'])
+# pl.plot(ACF['T6M_29_1_slice5.pkl red'])
+# pl.show()
