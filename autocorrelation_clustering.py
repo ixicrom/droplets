@@ -63,14 +63,14 @@ def main():
         # pl.imshow(ac3_g)
         # r_average(ac3_g)[:100]
 
-        ACF[index_r]=np.mean(ac3_r[:244, 99:102])
-
-        ACF[index_g]=np.mean(ac3_g[:244, 99:102])
+        ACF[index_r]=np.mean(ac3_r[:244, 99:102], axis=1)
+        ACF[index_g]=np.mean(ac3_g[:244, 99:102], axis=1)
 
 
     ACF = ACF.transpose()
     ACF.index = pd.MultiIndex.from_tuples(ACF.index)
 
+    ACF
     np.random.seed(1234)
     kmeans=cluster.KMeans().fit(ACF)
     labs = pd.Series(kmeans.labels_, index = ACF.index, name='Cluster')
@@ -85,17 +85,17 @@ def main():
     date = datetime.today().strftime('%Y-%m-%d')
     filePath = '/Users/s1101153/Dropbox/Emily/Results/'
 
-    fileName = date + '_ACF_clusters_1d-av.csv'
+    fileName = date + '_ACF_clusters_3pt-av.csv'
     outFile = filePath+fileName
     dat_toPlot.to_csv(outFile, header=True)
     print('File saved: '+outFile)
 
 
-    fileName = date + '_ACF_clusters_3pt-av.csv'
+    fileName = date + '_ACF_clusters_3pt-av_small.csv'
     out2 = filePath + fileName
-    # dat_clusters = dat_toPlot.drop(['ACF_index','Value'], axis='columns').drop_duplicates()
-    # dat_clusters = dat_clusters.reset_index(drop=True)
-    # dat_clusters.to_csv(out2, header=True)
+    dat_clusters = dat_toPlot.drop(['ACF_index','Value'], axis='columns').drop_duplicates()
+    dat_clusters = dat_clusters.reset_index(drop=True)
+    dat_clusters.to_csv(out2, header=True)
     print('File saved: '+out2)
 
 
