@@ -6,10 +6,10 @@ import matplotlib.pyplot as pl
 
 #read the image file into an array
 imFile = '/Volumes/PhD/DavidData/Emily/2014_6_2-T2M_6_63xoil_1.lsm'
-imArr = io.imread(imFile)
-# np.shape(imArr[0])
-im1 = imArr[0][:,:,0]
-
+imArr = io.imread(imFile, plugin = 'tifffile')
+imArr.shape
+im1 = imArr[0][0][:,:,0]
+pl.imshow(im1)
 #initialise arrays and set image size L in pixels
 L=1024
 r=[]
@@ -66,4 +66,4 @@ print("Slice 12: ")
 print(slices[11].describe())
 
 #save each slice as a numpy array
-slices[0]["r"]
+# slices[0]["r"]
