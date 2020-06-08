@@ -74,7 +74,7 @@ for i in range(n_slices):
     green_slice = green_slice[:,~np.all(np.isnan(green_slice), axis=0)]
     red_slice = red_slice[~np.all(np.isnan(red_slice), axis=1)]
     red_slice = red_slice[:,~np.all(np.isnan(red_slice), axis=0)]
-    pl.imshow(im)
+    pl.imshow(red_slice)
     pl.savefig(str(i))
     pl.clf()
     green_slices.append(green_slice)
@@ -84,9 +84,10 @@ for i in range(n_slices):
 
 
 # threshold image
-image = imArr.copy()[:,:,0]
+image = imArr.copy()[:,:,2]
 threshold_val = filters.threshold_otsu(image)
 
-labeled_foreground = (image>threshold_val).astype(int)
+labeled_foreground = (image>threshold_val)#.astype(int)
 io.imshow(labeled_foreground)
 io.imshow(image)
+area_frac = np.sum(labeled_foreground)
