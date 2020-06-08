@@ -8,6 +8,7 @@ import pandas as pd
 # import math
 from sklearn import cluster, preprocessing
 from datetime import datetime
+import math
 
 # def r_average(data):
 #     y, x = np.indices((data.shape))
@@ -88,3 +89,34 @@ def main():
 
 
 main()
+
+
+im_g.shape[-1]
+t_im_g = np.transpose(im_g)
+scaled_im_g=t_im_g*(np.arange(t_im_g.shape[-1])+1)/math.pi/600
+
+scaled_im_g
+
+thresholded_g = np.copy(scaled_im_g)
+thresholded_g[thresholded_g > 0.35] = 1
+thresholded_g[thresholded_g <= 0.35] = 0
+naive_a_frac_g = np.sum(thresholded_g)/len(im_g)
+pl.imshow(scaled_im_g)
+pl.imshow(thresholded_g)
+
+slice = np.load('/Volumes/PhD/DavidData/Slices/T2M_6_1_slice0.npy')
+
+slice = min_max_scaler.fit_transform(slice)
+slice[:,0]
+pl.scatter(slice[:,0], slice[:,1], c=slice[:,2])
+thresh_slice = np.copy(slice)
+mask = thresh_slice > 0.35
+vals = thresh_slice[:,2]
+mask = mask[:,2]
+mask
+vals
+vals[mask] = 1
+vals[~mask] = 0
+
+thresh_slice[:,2] = vals
+pl.scatter(thresh_slice[:,0], thresh_slice[:,1], c=thresh_slice[:,2])
