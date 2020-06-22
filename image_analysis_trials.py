@@ -1,4 +1,5 @@
-from skimage import filters, io, draw, transform, measure
+from skimage import filters, io, draw, transform, measure, segmentation, color
+from skimage.future import graph
 import numpy as np
 from sklearn import preprocessing
 import matplotlib.pyplot as pl
@@ -75,8 +76,9 @@ for i in range(n_slices):
     red_slice = red_slice[~np.all(np.isnan(red_slice), axis=1)]
     red_slice = red_slice[:,~np.all(np.isnan(red_slice), axis=0)]
     pl.imshow(red_slice)
-    pl.savefig(str(i))
-    pl.clf()
+    pl.show()
+    # pl.savefig(str(i))
+    # pl.clf()
     green_slices.append(green_slice)
     red_slices.append(red_slice)
     im = transform.rotate(im, np.degrees(theta1), center = [C_y, C_x])
@@ -91,3 +93,80 @@ labeled_foreground = (image>threshold_val)#.astype(int)
 io.imshow(labeled_foreground)
 io.imshow(image)
 area_frac = np.sum(labeled_foreground)
+
+
+
+for i in range(20):
+    block_size = i*10 +1
+    thr_local = filters.threshold_local(image, block_size, offset=10)
+    binary_local = image<thr_local
+    pl.imshow(binary_local)
+    pl.title(block_size)
+    pl.show()
+
+
+image2 = imArr.copy()[:,:,0]
+pl.imshow(image2)
+for i in range(20):
+    block_size = i*10 +1
+    thr_local2 = filters.threshold_local(image2, block_size, offset=10)
+    binary_local2 = image2<thr_local2
+    pl.imshow(binary_local2)
+    pl.title(block_size)
+    pl.show()
+
+
+thr_global2 = filters.threshold_otsu(image2)
+binary_global2 = image2>thr_global2
+pl.imshow(binary_global2)
+
+# image segmentation
+labels1 = segmentation.slic(image.astype('double'), compactness=30, n_segments=400)
+out1 = color.label2rgb(labels1, image, kind='avg')
+
+g = graph.rag_mean_color(image, labels1, mode='similarity')
+labels2 = graph.cut_normalized(labels1, g)
+out2 = color.label2rgb(labels2, image, kind='avg')
+
+fig, ax = pl.subplots(nrows=2, sharex=True, sharey=True, figsize=(6, 8))
+
+ax[0].imshow(out1)
+ax[1].imshow(out2)
+
+for a in ax:
+    a.axis('off')
+
+pl.tight_layout()
+pl.show()
+
+
+
+def plot(data, title):
+    plot.i += 1
+    pl.subplot(3,2,plot.i)
+    pl.imshow(data)
+    # pl.gray()
+    pl.title(title)
+
+# high-pass filtering
+plot.i = 0
+plot(image, 'Original1')
+plot(image, 'Original2')
+g = filters.gaussian(image, sigma=5)
+g2 = filters.gaussian(image2, sigma=5)
+plot(g, 'Gaussian1')
+plot(g2, 'Gaussian2')
+hp1 = image-g
+hp2 = image2-g2
+plot(hp1, 'HighPass1')
+plot(hp2, 'HighPass2')
+pl.show()
+# pl.savefig('highpassFilters.png')
+
+thr_hp1 = filters.threshold_otsu(hp1)
+bin_hp1 = hp1>thr_hp1
+io.imshow(bin_hp1)
+
+thr_hp2 = filters.threshold_otsu(hp2)
+bin_hp2 = hp2>thr_hp2
+io.imshow(bin_hp2)
