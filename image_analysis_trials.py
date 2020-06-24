@@ -4,6 +4,7 @@ import numpy as np
 from sklearn import preprocessing
 import matplotlib.pyplot as pl
 import math
+import pandas as pd
 
 imFile = '/Users/s1101153/Desktop/TIFs/SUM_2014_5_30-T3M_7_63xoil_1.tif'
 
@@ -170,3 +171,30 @@ io.imshow(bin_hp1)
 thr_hp2 = filters.threshold_otsu(hp2)
 bin_hp2 = hp2>thr_hp2
 io.imshow(bin_hp2)
+
+
+# region properties
+label_img = measure.label(image)
+io.imshow(label_img)
+
+label_otsu_image = measure.label(labeled_foreground)
+np.unique(label_otsu_image)
+io.imshow(label_otsu_image)
+io.imshow(labeled_foreground)
+
+label_hp_thr_image = measure.label(bin_hp1)
+io.imshow(label_hp_thr_image)
+
+
+
+label_props = measure.regionprops_table(label_otsu_image, properties=('filled_area','perimeter','centroid'))
+
+otsu_region_props = pd.DataFrame(label_props)
+otsu_region_props
+# biggest_region = otsu_region_props[otsu_region_props['filled_area']==max(otsu_region_props['filled_area'])]
+# circularity = 4*math.pi*biggest_region['filled_area']/biggest_region['perimeter']**2
+otsu_region_props['circularity'] = 4*math.pi*otsu_region_props['filled_area']/otsu_region_props['perimeter']**2
+otsu_region_props
+
+raw_props = measure.regionprops_table(image.astype(int), properties=('filled_area', 'perimeter', 'centroid'))
+pd.DataFrame(raw_props)
