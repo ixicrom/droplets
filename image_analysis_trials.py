@@ -6,14 +6,24 @@ from sklearn import preprocessing
 import matplotlib.pyplot as pl
 import math
 import pandas as pd
+import matplotlib.patches as mpatches
+from sklearn import preprocessing
+from scipy import ndimage
 
 # %% read in file
 imFile = '/Users/s1101153/Desktop/TIFs/SUM_2014_5_30-T3M_7_63xoil_1.tif'
 
 imArr = io.imread(imFile)
-imArr.shape
+for i in range(3):
+    imArr[:,:,i] = imArr[:,:,i]/np.max(imArr[:,:,i])
+min_max_scaler = preprocessing.MinMaxScaler()
 
-io.imshow(imArr[:,:,2])
+image = imArr.copy()[:,:,2]
+
+image2 = imArr.copy()[:,:,0]
+
+io.imshow(image)
+pl.show()
 
 # %% create mask for segment slice, using coords for centre of droplet
 L = 2048
@@ -74,7 +84,7 @@ n_slices = 12
 im = imArr.copy()
 for i in range(n_slices):
     masked_im = im.copy()
-    masked_im[~mask] = float('NaN')
+    masked_im[~mask] = 0#float('NaN')
     masked_im.shape
     green_slice = masked_im[:,:,0]
     red_slice = masked_im[:,:,2]
@@ -93,7 +103,6 @@ for i in range(n_slices):
 
 # trying different methods of thresholding the image
 # %% global thresholding using otsu
-image = imArr.copy()[:,:,2]
 threshold_val = filters.threshold_otsu(image)
 
 labeled_foreground = (image>threshold_val)#.astype(int)
@@ -104,6 +113,7 @@ pl.show()
 area_frac = np.sum(labeled_foreground)
 print(area_frac)
 
+image2 = imArr.copy()[:,:,0]
 thr_global2 = filters.threshold_otsu(image2)
 binary_global2 = image2>thr_global2
 io.imshow(binary_global2)
@@ -121,8 +131,6 @@ for i in range(20):
     pl.title(block_size)
     pl.show()
 
-
-image2 = imArr.copy()[:,:,0]
 pl.imshow(image2)
 for i in range(20):
     block_size = i*10 +1
@@ -163,7 +171,7 @@ def plot(data, title):
 
 plot.i = 0
 plot(image, 'Original1')
-plot(image, 'Original2')
+plot(image2, 'Original2')
 g = filters.gaussian(image, sigma=5)
 g2 = filters.gaussian(image2, sigma=5)
 plot(g, 'Gaussian1')
@@ -186,9 +194,10 @@ io.imshow(bin_hp2)
 pl.show()
 
 # %% calculating circularity of shape from otsu thresholded image using region properties
-# will need to think more about this, circularity of the droplet won't make sense in the slices
+# will need to think more about this, circularity of the droplet might not make sense in the slices
 label_img = measure.label(image)
 io.imshow(label_img)
+pl.show()
 
 label_otsu_image = measure.label(labeled_foreground)
 print(np.unique(label_otsu_image))
@@ -219,21 +228,20 @@ pd.DataFrame(raw_props)
 io.imshow(image)
 pl.show()
 thresh=filters.threshold_otsu(image)
-plain_thresh_im = image>thresh
+# plain_thresh_im = image>thresh
 # io.imshow(plain_thresh_im)
 # pl.show()
 bw = morphology.closing(image>thresh, morphology.square(2))
 io.imshow(bw)
 pl.show()
-
 cleared = segmentation.clear_border(bw)
 io.imshow(cleared)
 pl.show
 
 label_image = measure.label(cleared)
-image_label_overlay = color.label2rgb(label_image, image=bw, bg_label=0)
+image_label_overlay = color.label2rgb(label_image, image=image, bg_label=0)
 io.imshow(image_label_overlay)
-
+pl.show()
 fig, ax = pl.subplots(figsize=(10,6))
 ax.imshow(image_label_overlay)
 
@@ -251,23 +259,28 @@ pl.show()
 
 
 # %% function to apply the above to any image
-def threshold_and_label(img, regionsize):
+def threshold_and_label(img, regionsize, highpass = False, drawbox = True):
+    if highpass:
+        kernel = np.array([[-1, -1, -1, -1, -1],
+                   [-1,  1,  2,  1, -1],
+                   [-1,  2,  4,  2, -1],
+                   [-1,  1,  2,  1, -1],
+                   [-1, -1, -1, -1, -1]])
+        img = ndimage.convolve(img, kernel)
     thresh=filters.threshold_otsu(img)
     plain_thresh_im = img>thresh
     bw = morphology.closing(img>thresh, morphology.square(2))
 
     cleared = segmentation.clear_border(bw)
 
-
     label_image = measure.label(cleared)
-    image_label_overlay = color.label2rgb(label_image, image=bw, bg_label=0)
+    image_label_overlay = color.label2rgb(label_image, image=img, bg_label=0)
 
     fig, ax = pl.subplots(figsize=(10,6))
     ax.imshow(image_label_overlay)
 
-    import matplotlib.patches as mpatches
     for region in measure.regionprops(label_image):
-        if region.area >= regionsize:
+        if (region.area >= regionsize and drawbox):
             minr, minc, maxr, maxc = region.bbox
             rect = mpatches.Rectangle((minc, minr), maxc-minc, maxr-minr, fill=False, edgecolor='red', linewidth=2)
             ax.add_patch(rect)
@@ -275,5 +288,8 @@ def threshold_and_label(img, regionsize):
     pl.tight_layout()
     pl.show()
 
-threshold_and_label(image, 0)
+
+threshold_and_label(image, 100)
 threshold_and_label(image2, 100)
+threshold_and_label(green_slices[0],100)
+threshold_and_label(red_slices[0],100)
