@@ -88,10 +88,10 @@ for i in range(n_slices):
     masked_im.shape
     green_slice = masked_im[:,:,0]
     red_slice = masked_im[:,:,2]
-    green_slice = green_slice[~np.all(np.isnan(green_slice), axis=1)]
-    green_slice = green_slice[:,~np.all(np.isnan(green_slice), axis=0)]
-    red_slice = red_slice[~np.all(np.isnan(red_slice), axis=1)]
-    red_slice = red_slice[:,~np.all(np.isnan(red_slice), axis=0)]
+    # green_slice = green_slice[~np.all(np.isnan(green_slice), axis=1)]
+    # green_slice = green_slice[:,~np.all(np.isnan(green_slice), axis=0)]
+    # red_slice = red_slice[~np.all(np.isnan(red_slice), axis=1)]
+    # red_slice = red_slice[:,~np.all(np.isnan(red_slice), axis=0)]
     pl.imshow(red_slice)
     pl.show()
     # pl.savefig(str(i))
