@@ -83,3 +83,15 @@ def count_clusters(dat, counter, grouper1, grouper2="Null"):
     cluster_count = dat_sorted.pivot(index=counter, columns='Entry').fillna(0)
 
     return(cluster_count)
+
+
+def gini_score(cluster_freq):
+    sample_scores = list() # make list for output scores
+
+    for col in cluster_freq.columns: # will calculate a score for each image
+        counts = cluster_freq[col].values
+        p = counts[counts!=0]/sum(counts) # remove all zeroes (those clusters aren't present so don't want to include) and normalise
+        q = 1-p
+        G = sum(p*q) # calculate index
+        sample_scores.append(G)
+    return sample_scores
