@@ -30,7 +30,7 @@ from datetime import datetime
 def main():
     # read in files and drop NAs
     norm = False
-    filePath='/Users/s1101153/Dropbox/Emily/'
+    filePath='/Users/s1101153/Dropbox/Emily/rect_pickles'
     dat=read_files(filePath)
     # idx=pd.IndexSlice
 
