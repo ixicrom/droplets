@@ -9,6 +9,7 @@ import pandas as pd
 import matplotlib.patches as mpatches
 from sklearn import preprocessing
 from scipy import ndimage
+from os import path
 
 from slice_tools import *
 from data_tools import *
@@ -25,14 +26,24 @@ from data_tools import *
 # r_index=0
 
 # %%
-def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index):
+def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index, r=None):
     im = io.imread(file)
+
+    file_title = path.splitext(path.split(file)[1])[0]
+    start1=file_title.find("T")
+    end1=file_title.find("_63xoil")
+    part1=file_title[start1:end1]
+    start2=end1+7
+    end2=start2+2
+    part2=file_title[start2:end2]
+    samplename=part1+part2
 
     pixel_um=L/um
     C_y = C_y_um*pixel_um
     C_x = C_x_um*pixel_um
 
-    r = round(min([C_x, C_y, L-C_x, L-C_y]))
+    if r == None:
+        r = round(min([C_x, C_y, L-C_x, L-C_y]))
 
     theta0, theta1 = 0, math.pi/6
 
@@ -54,7 +65,7 @@ def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index):
     cols=[None]*24
     cols[0:11]=['green']*12
     cols[12:]=['red']*12
-    arrays=[[file]*24,cols,[0,1,2,3,4,5,6,7,8,9,10,11]*2]
+    arrays=[[samplename]*24,cols,[0,1,2,3,4,5,6,7,8,9,10,11]*2]
     ind=pd.MultiIndex.from_arrays(arrays, names=('sample', 'colour', 'slice'))
     dat=pd.DataFrame(index=ind, columns=['imArray'])
     idx=pd.IndexSlice
@@ -70,8 +81,8 @@ def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index):
         green_slice = green_slice/np.max(green_slice)
         red_slice = masked_im[:,:,r_index]
         red_slice = red_slice/np.max(red_slice)
-        dat.loc[idx[file,'green',i],'imArray']=green_slice
-        dat.loc[idx[file,'red',i],'imArray']=red_slice
+        dat.loc[idx[samplename,'green',i],'imArray']=green_slice
+        dat.loc[idx[samplename,'red',i],'imArray']=red_slice
         im = transform.rotate(im, np.degrees(theta1), center = [C_y, C_x])
 
         # df = pd.DataFrame([green_slices, red_slices])
