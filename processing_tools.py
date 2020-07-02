@@ -2,13 +2,12 @@
 from skimage import filters, io, draw, transform, measure, segmentation, color, morphology
 from skimage.future import graph
 import numpy as np
-from sklearn import preprocessing
+from sklearn import preprocessing, cluster
 import matplotlib.pyplot as pl
 import math
 import pandas as pd
 import matplotlib.patches as mpatches
-from sklearn import preprocessing
-from scipy import ndimage
+from scipy import ndimage, spatial
 from os import path
 
 from slice_tools import *
@@ -89,6 +88,34 @@ def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index, r=None):
     return dat
 # dat
 
+def slice_folder(filePath, infoFile, save=False, saveFile=None):
+    f = open(infoFile, 'r')
+    first_time=True
+    for line in f.readlines():
+        if line.startswith('SUM'):
+            vals=line.split(',')
+            fileName = filePath+vals[0]
+            umSize=float(vals[1])
+            L=int(vals[2])
+            Cx=float(vals[4])
+            Cy=float(vals[3])
+            g_index=int(vals[5]) #call the fuller channel the green one
+            r_index=int(vals[6]) #call the sparser channel the red one
+            n_slice = 12
+            if(first_time):
+                slices = read_slice(fileName, L, umSize, Cx, Cy, g_index, r_index)
+                first_time=False
+            else:
+                newslice = read_slice(fileName, L, umSize, Cx, Cy, g_index, r_index)
+                slices = pd.concat([slices, newslice], axis=0)
+    f.close()
+    if save:
+        slices.to_pickle(saveFile)
+        print('New slices saved: ' + saveFile)
+    else:
+        print('New slices not saved')
+    return slices
+
 def threshold_and_label(img, highpass = False):
     if highpass:
         kernel = np.array([[-1, -1, -1, -1, -1],
@@ -120,3 +147,46 @@ def threshold_and_label(img, highpass = False):
     # ax.set_axis_off()
     # pl.tight_layout()
     # pl.show()
+
+
+def calc_variables(slices, highpass):
+    av_connected_area = list()
+    av_separation = list()
+    area_sum = list()
+    av_circularity = list()
+    for s in slices['imArray']:
+        lab_im = threshold_and_label(s, highpass = highpass)
+        areas=list()
+        centres=list()
+        circs=list()
+        for region in measure.regionprops(lab_im):
+            areas.append(region.area)
+            centres.append(region.centroid)
+            if region.perimeter ==0:
+                circ = 0
+            else:
+                circ = 4*math.pi*region.area/region.perimeter**2
+            circs.append(circ)
+
+        av_connected_area.append(np.mean(areas))
+
+        distances = spatial.distance.pdist(centres)
+        av_separation.append(np.mean(distances))
+
+        area_sum.append(np.sum(areas))
+
+        av_circularity.append(np.mean(circs))
+
+
+    #     if len(areas)>0:
+    #         print(str(i) + ': ' + str(np.mean(areas)))
+    #     else:
+    #         print(str(i) + ': 0')
+    #         print(str(i) + ': ' + str(np.mean(areas)))
+    #     i=i+1
+
+    slices['av_connected_area'] = av_connected_area
+    slices['av_separation'] = av_separation
+    slices['area_sum'] = area_sum
+    slices['av_circularity'] = av_circularity
+    return slices
