@@ -32,17 +32,20 @@ if(input('Normalise the data? (y/n): ')=='y'):
 
 # remove a dimension by averaging over theta
 dat_all = theta_average(dat)
-# dat_all
+dat_all
 dat_all = dat_all.transpose().reset_index()
-
+dat_all['slices']
 
 # # average over groups of N r values to bin data
-N = int(input('How many r values to average over: '))
-dat_r_bins = dat_all.groupby(np.arange(len(dat_all))//N).mean()
-dat_all = dat_r_bins.transpose()
-
-dat_all.insert(0,'sample', dat_all['slices'].str.slice(0,8).str.rstrip('_'))
-dat_all['slices']=dat_all['slices'].str.rstrip('.pkl').str[-2:].str.lstrip('e').astype(int)
+# N = int(input('How many r values to average over: '))
+# dat_r_bins = dat_all.groupby(np.arange(len(dat_all))//N).mean()
+# dat_r_bins
+# dat_all = dat_r_bins.transpose()
+# dat_all
+samples=dat_all['slices'].str.slice(0,8).str.rstrip('_')
+dat_all.insert(0,'sample', samples)
+slice_nums=dat_all['slices'].str.rstrip('.pkl').str[-2:].str.lstrip('e').astype(int)
+dat_all['slices']=slice_nums
 dat_all.rename(columns={'slices':'slice'}, inplace=True)
 
 x=dat_all['sample']
