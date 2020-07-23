@@ -1,23 +1,49 @@
 from processing_tools import *
 from sklearn import cluster
+from slice_tools import *
 
-imPath = '/Users/s1101153/Desktop/TIFs/'
-infoFile = '/Users/s1101153/Dropbox/Emily/z-stack_info.csv'
+imPath = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/'
+infoFile = '/Users/s1101153/Desktop/droplet_stacks/63x/stack_info.csv'
 
 if input('Re-calculate image slices? y/n: ') == 'y':
     print('Re-calculating slices...')
-    slices = slice_folder(imPath, infoFile, save=False)
+    slices = slice_folder(imPath, infoFile, save=True, saveFile='/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl')
 
 else:
-    slices = pd.read_pickle('/Users/s1101153/Dropbox/Emily/nice_slices.pkl')
+    slices = pd.read_pickle('/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl')
 
+slices
 slices_data = calc_variables(slices, highpass=False)
+
+# #
+# #
+# img=slices.loc['phip0-5_phir10_2','green',4].values[0]
+# img
+# io.imshow(img)
+# img_good=slices.loc['phip0-5_phir10_2','green',2].values[0]
+# io.imshow(img_good)
+#
+# lab_good=threshold_and_label(img_good, highpass=False)
+# np.max(lab_good)
+# lab=threshold_and_label(img, highpass=False)
+# np.max(lab)
+#
+# thr=filters.threshold_otsu(img)
+# thr
+# io.imshow(img>0.5)
+#
+# thr_good=filters.threshold_otsu(img_good)
+# io.imshow(img_good>thr_good)
+#
+# measure.regionprops(lab_good)
+# measure.regionprops(lab)
+#
 
 slices_data=slices_data.drop('imArray', axis=1)
 
 
 norm = False
-filePath='/Users/s1101153/Dropbox/Emily/rect_pickles'
+filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
 dat=read_files(filePath)
 idx=pd.IndexSlice
 
@@ -42,9 +68,11 @@ dat_all['slices']
 # dat_r_bins
 # dat_all = dat_r_bins.transpose()
 # dat_all
-samples=dat_all['slices'].str.slice(0,8).str.rstrip('_')
+samples=dat_all['slices'].str.slice(4,21).str.rstrip('_stack')
+samples
 dat_all.insert(0,'sample', samples)
 slice_nums=dat_all['slices'].str.rstrip('.pkl').str[-2:].str.lstrip('e').astype(int)
+slice_nums
 dat_all['slices']=slice_nums
 dat_all.rename(columns={'slices':'slice'}, inplace=True)
 
