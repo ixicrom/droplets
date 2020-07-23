@@ -87,7 +87,7 @@ def slice_all(datFile, filePath, save=False):
             Cx=float(vals[4])
             Cy=float(vals[3])
             n_slice = 12
-            im_slices=slice_image(fileName, umSize, pxSize, Cx, Cy, n_slice, save)
+            im_slices=slice_image(fileName, umSize, pxSize, Cx, Cy, n_slice, saveFile=save)
             all_slices.append(im_slices)
     return all_slices
 
@@ -102,16 +102,21 @@ def read_files(folderName, dropNans = True):
         entry.columns.names=['vars']
         dat.append(entry)
         # making nice column names_______
-        start1=file.find("T")
-        end1=file.find("_63xoil")
-        part1=file[start1:end1]
-        start2=end1+7
-        end2=start2+2
-        part2=file[start2:end2]
-        start3=file.find(".tif")+4
-        part3=file[start3:]
-        key=part1+part2+part3
-        keys.append(str(key))
+        oldFileType=False
+        if oldFileType:
+            start1=file.find("T")
+            end1=file.find("_63xoil")
+            part1=file[start1:end1]
+            start2=end1+7
+            end2=start2+2
+            part2=file[start2:end2]
+            start3=file.find(".tif")+4
+            part3=file[start3:]
+            key=part1+part2+part3
+            keys.append(str(key))
+        else:
+            key=file[:-6]
+            keys.append(file[56:-4])
         # ________________________________
     # print([x for x in keys if keys.count(x) >= 2])
     dat_df=pd.concat(dat, axis=1, keys=keys, names=['slices']) #axis=1 for side-by-side. will do multi-layer column names
