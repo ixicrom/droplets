@@ -15,27 +15,32 @@ from data_tools import *
 
 
 # %% hard inputs for testing
-# file='/Users/s1101153/Desktop/TIFs/SUM_2014_5_30-T3M_7_63xoil_1.tif'
-# L = 2048
-# um = 72.58
+# file='/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/SUM_phip0-5_phir10_2_stack.tif'
+# L = 1025
+# um = 99.84
 # pixel_um=L/um
-# C_x_um = 30.195
-# C_y_um = 34.342
-# g_index=2
-# r_index=0
+# C_x_um = 52.249
+# C_y_um = 51.735
+# g_index=0
+# r_index=1
 
 # %%
 def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index, r=None):
     im = io.imread(file)
+    oldFileType=False
 
-    file_title = path.splitext(path.split(file)[1])[0]
-    start1=file_title.find("T")
-    end1=file_title.find("_63xoil")
-    part1=file_title[start1:end1]
-    start2=end1+7
-    end2=start2+2
-    part2=file_title[start2:end2]
-    samplename=part1+part2
+    if oldFileType:
+        file_title = path.splitext(path.split(file)[1])[0]
+        start1=file_title.find("T")
+        end1=file_title.find("_63xoil")
+        part1=file_title[start1:end1]
+        start2=end1+7
+        end2=start2+2
+        part2=file_title[start2:end2]
+        samplename=part1+part2
+    else:
+        file_title=path.splitext(path.split(file)[1])[0]
+        samplename=file_title[4:-6]
 
     pixel_um=L/um
     C_y = C_y_um*pixel_um
@@ -72,14 +77,12 @@ def read_slice(file, L, um, C_x_um, C_y_um, g_index, r_index, r=None):
     n_slices = 12
     i=0
     for i in range(n_slices):
-        masked_im = im.copy()
-        masked_im[~mask] = 0#float('NaN')
-
-        masked_im.shape
+        masked_im = np.full(im.shape, np.NaN)
+        masked_im[mask] = im[mask]
         green_slice = masked_im[:,:,g_index]
-        green_slice = green_slice/np.max(green_slice)
+        green_slice = green_slice/np.max(green_slice[mask])
         red_slice = masked_im[:,:,r_index]
-        red_slice = red_slice/np.max(red_slice)
+        red_slice = red_slice/np.max(red_slice[mask])
         dat.loc[idx[samplename,'green',i],'imArray']=green_slice
         dat.loc[idx[samplename,'red',i],'imArray']=red_slice
         im = transform.rotate(im, np.degrees(theta1), center = [C_y, C_x])
@@ -116,6 +119,9 @@ def slice_folder(filePath, infoFile, save=False, saveFile=None):
         print('New slices not saved')
     return slices
 
+# img=dat.loc["phip0-5_phir10_2",'green',3].values[0]
+# img
+# pl.imshow(img)
 def threshold_and_label(img, highpass = False):
     if highpass:
         kernel = np.array([[-1, -1, -1, -1, -1],
@@ -124,8 +130,11 @@ def threshold_and_label(img, highpass = False):
                    [-1,  1,  2,  1, -1],
                    [-1, -1, -1, -1, -1]])
         img = ndimage.convolve(img, kernel)
-    thresh=filters.threshold_otsu(img)
+    img_idx = np.isnan(img)
+    thresh=filters.threshold_otsu(img[~img_idx])
     plain_thresh_im = img>thresh
+    # plain_thresh_im
+    # pl.imshow(plain_thresh_im)
     bw = morphology.closing(img>thresh, morphology.square(2))
 
     cleared = segmentation.clear_border(bw)
@@ -133,7 +142,7 @@ def threshold_and_label(img, highpass = False):
     label_image = measure.label(cleared)
 
     return label_image
-
+# measure.regionprops(label_image)
     # image_label_overlay = color.label2rgb(label_image, image=img, bg_label=0)
     #
     # fig, ax = pl.subplots(figsize=(10,6))
@@ -151,7 +160,9 @@ def threshold_and_label(img, highpass = False):
 
 def calc_variables(slices, highpass):
     av_connected_area = list()
+    area_stdev = list()
     av_separation = list()
+    sep_stdev = list()
     area_sum = list()
     av_circularity = list()
     for s in slices['imArray']:
@@ -169,9 +180,12 @@ def calc_variables(slices, highpass):
             circs.append(circ)
 
         av_connected_area.append(np.mean(areas))
+        area_stdev.append(np.std(areas))
+
 
         distances = spatial.distance.pdist(centres)
         av_separation.append(np.mean(distances))
+        sep_stdev.append(np.std(distances))
 
         area_sum.append(np.sum(areas))
 
@@ -186,7 +200,9 @@ def calc_variables(slices, highpass):
     #     i=i+1
 
     slices['av_connected_area'] = av_connected_area
+    slices['stdev_connected_area'] = area_stdev
     slices['av_separation'] = av_separation
+    slices['stdev_separation'] = sep_stdev
     slices['area_sum'] = area_sum
     slices['av_circularity'] = av_circularity
     return slices
