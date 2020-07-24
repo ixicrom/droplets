@@ -47,12 +47,13 @@ def h_cluster(dat_forLearning, cut_num, showPlot = True):
     Z_results = pd.DataFrame([Z_leaves, Z_cut]).transpose()
 
     images = Z_results[0].values
-    slices = [x[0] for x in images]
+    samples = [x[0] for x in images]
     colours = [x[1] for x in images]
+    slices = [x[2] for x in images]
     Z_clusters = Z_results[1].values
     clusters_h = [x[0] for x in Z_clusters]
     Z_results[1] = clusters_h
-    Z_results.index = [slices, colours]
+    Z_results.index = [samples, colours, slices]
     Z_results.columns = ['Image','Cluster_hier']
     Z_results = Z_results.drop(columns='Image')
     return Z_results
