@@ -123,3 +123,47 @@ print(gini_score(cluster_count))
 print(np.mean(gini_score(cluster_count)))
 cluster_count.transpose().plot(kind='bar', stacked=True)
 pl.show()
+
+
+scores = list()
+for i in np.arange(1,32):
+    np.random.seed(1234)
+    kmeans = cluster.KMeans(n_clusters=i).fit(clean_data)
+    labels = pd.DataFrame(kmeans.labels_, index=clean_data.index, columns=['cluster'])
+    toCount = labels.reset_index()
+    clust_count = count_clusters(toCount, counter='cluster', grouper1='sample', grouper2='colour')
+    score = np.mean(gini_score(clust_count))
+    scores.append(1-score)
+
+
+pl.plot(np.arange(1,32),scores)
+pl.show()
+
+
+def hier_clusters(num_clust):
+    np.random.seed(1234)
+    hier = h_cluster(clean_data, num_clust, showPlot=False)
+    hier
+    hier.index = clean_data.index
+    hier
+    hier.sort_values(by='Cluster_hier')
+
+    samp_names = hier.index.get_level_values(0)
+
+    phip=samp_names.str[0:7].str.rstrip("_phi")
+
+    phir=samp_names.str[6:15]
+    phir=phir.str.lstrip("5_").str.rstrip("_2")
+
+    phir
+    hier['phir'] = phir
+    hier['phip'] = phip
+    hier
+    print(count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phir'))
+    print(count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phip'))
+
+
+for i in range(1,10):
+    print('Number of clusters = '+str(i))
+    hier_clusters(i)
+    print("_________________________________________________________________")
