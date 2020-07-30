@@ -110,6 +110,8 @@ full_data
 
 clean_data = full_data.dropna()
 
+
+
 np.random.seed(1234)
 kmeans_all = cluster.KMeans(n_clusters=8).fit(clean_data)
 labels_all =  pd.DataFrame(kmeans_all.labels_, index = clean_data.index, columns=['cluster_all'])
@@ -159,11 +161,37 @@ def hier_clusters(num_clust):
     hier['phir'] = phir
     hier['phip'] = phip
     hier
-    print(count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phir'))
-    print(count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phip'))
+    phir_count = count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phir', grouper2='colour')
+    phip_count = count_clusters(hier.reset_index(), counter='Cluster_hier', grouper1 = 'phip', grouper2='colour')
+    phir_count.transpose().plot(kind='bar', stacked=True)
+    phip_count.transpose().plot(kind='bar', stacked=True)
+
+def k_means_clusters(num_clust):
+    np.random.seed(1234)
+    kmeans = cluster.KMeans(n_clusters = num_clust).fit(clean_data)
+    labels = pd.DataFrame(kmeans.labels_, index=clean_data.index, columns=['Cluster_kmeans'])
+    samp_names = labels.index.get_level_values(0)
+    phip=samp_names.str[0:7].str.rstrip("_phi")
+    phir=samp_names.str[6:15]
+    phir=phir.str.lstrip("5_").str.rstrip("_2")
+
+    # phir=phir.str.lstrip('phir')
+    # phip=phip.str.lstrip('phip').str.replace('-','.')
+    labels['phir']=phir
+    labels['phip']=phip
+    phir_count = count_clusters(labels.reset_index(), counter='Cluster_kmeans', grouper1 = 'phir')
+    phip_count = count_clusters(labels.reset_index(), counter='Cluster_kmeans', grouper1 = 'phip')
+    phir_count.transpose().plot(kind='bar', stacked=True)
+    phip_count.transpose().plot(kind='bar', stacked=True)
+
+labels
+for i in range(1,10):
+    # print('Number of clusters = '+str(i))
+    hier_clusters(i)
+    # print("_________________________________________________________________")
 
 
 for i in range(1,10):
-    print('Number of clusters = '+str(i))
-    hier_clusters(i)
-    print("_________________________________________________________________")
+    # print('Number of clusters = '+str(i))
+    k_means_clusters(i)
+    # print("_________________________________________________________________")
