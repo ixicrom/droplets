@@ -101,3 +101,19 @@ np.random.seed(1234)
 kmeans_PCA = KMeans(n_clusters=16).fit(transformed_vals)
 labs['PCA'] = kmeans_PCA.labels_
 labs
+names = labs.index.get_level_values(0)
+cols = labs.index.get_level_values(1)
+names
+cols=cols.str.lstrip('val_')
+samples=names.str.lstrip('SUM_').str[0:15].str.rstrip('_stack')
+slices = names.str[-7:].str.lstrip('_')
+labs['colour'] = cols
+labs['sample'] = samples
+labs['slice'] = slices
+
+normal_count = count_clusters(labs.reset_index(), counter='normal', grouper1='sample', grouper2='colour')
+PCA_count = count_clusters(labs.reset_index(), counter='PCA', grouper1='sample', grouper2='colour')
+
+
+normal_count.transpose().plot(kind='bar', stacked=True)
+PCA_count.transpose().plot(kind='bar', stacked=True)
