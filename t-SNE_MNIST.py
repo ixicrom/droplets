@@ -1,6 +1,5 @@
 import numpy as np
 import matplotlib.pyplot as pl
-from matplotlib import offsetbox
 from sklearn import (manifold, datasets, decomposition, ensemble, discriminant_analysis)
 
 # mnist=datasets.fetch_openml('mnist_784')
@@ -11,8 +10,8 @@ digits = datasets.load_digits(n_class=10)
 X=digits.data
 y=digits.target
 
-n_samples, n_features = X.shape
-n_neighbors = 30
+# n_samples, n_features = X.shape
+# n_neighbors = 30
 
 
 def plot_labels(X, title=None):
