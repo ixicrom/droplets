@@ -73,9 +73,8 @@ def count_clusters(dat, counter, grouper1, grouper2="Null"):
     else:
         dat['Entry'] = dat[grouper1] + dat[grouper2]
 
-    dat_small = dat[['Entry', counter]]
+    dat_small = dat[['Entry', counter]].copy()
     dat_small['MergedID'] = dat_small[counter].apply(str)+dat_small['Entry']
-
     counts = np.unique(dat_small['MergedID'], return_counts=True)
     dat_sorted = dat_small.sort_values(['MergedID']).drop_duplicates().reset_index(drop=True)
     dat_sorted = dat_sorted.drop('MergedID', axis='columns')
