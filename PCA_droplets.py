@@ -90,28 +90,56 @@ pl.show()
 
 # %%
 
-np.random.seed(1234)
-kmeans_normal = KMeans(n_clusters = 16).fit(scaled_vals)
-labs = pd.DataFrame(kmeans_normal.labels_, index=vals.index, columns=['normal'])
+
+def PCA_cluster(n_clust):
+    np.random.seed(1234)
+    km = KMeans(n_clusters=n_clust)
+    kmeans_normal = km.fit(scaled_vals)
+    labs = pd.DataFrame(kmeans_normal.labels_, index=vals.index, columns=['normal'])
+
+    np.random.seed(1234)
+    kmeans_PCA = km.fit(transformed_vals)
+    labs['PCA'] = kmeans_PCA.labels_
+
+    names = labs.index.get_level_values(0)
+    cols = labs.index.get_level_values(1)
+    cols=cols.str.lstrip('val_')
+    samples=names.str.lstrip('SUM_').str[0:18].str.rstrip('_stack')
+    slices = names.str[-7:].str.lstrip('_')
+    labs['colour'] = cols
+    labs['sample'] = samples
+    labs['slice'] = slices
+
+    normal_count = count_clusters(labs.reset_index(), counter='normal', grouper1='sample', grouper2='colour')
+    PCA_count = count_clusters(labs.reset_index(), counter='PCA', grouper1='sample', grouper2='colour')
+    return normal_count, PCA_count
 
 
-np.random.seed(1234)
-kmeans_PCA = KMeans(n_clusters=16).fit(transformed_vals)
-labs['PCA'] = kmeans_PCA.labels_
-labs
-names = labs.index.get_level_values(0)
-cols = labs.index.get_level_values(1)
-names
-cols=cols.str.lstrip('val_')
-samples=names.str.lstrip('SUM_').str[0:15].str.rstrip('_stack')
-slices = names.str[-7:].str.lstrip('_')
-labs['colour'] = cols
-labs['sample'] = samples
-labs['slice'] = slices
+for n in range(2,17):
+    n_count, p_count = PCA_cluster(n)
+    pl.subplot(1,2,1)
+    n_count.transpose().plot(kind='bar', stacked=True, ax=pl.gca(), legend=False)
+    pl.title('K-means only')
+    pl.ylabel('Cluster frequency')
+    pl.xlabel('Original image')
+    pl.subplot(1,2,2)
+    p_count.transpose().plot(kind='bar', stacked=True, ax=pl.gca())
+    pl.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
+    pl.title('K-means after PCA de-noising')
+    pl.ylabel('Cluster frequency')
+    pl.xlabel('Original image')
+    pl.tight_layout()
+    pl.show()
 
-normal_count = count_clusters(labs.reset_index(), counter='normal', grouper1='sample', grouper2='colour')
-PCA_count = count_clusters(labs.reset_index(), counter='PCA', grouper1='sample', grouper2='colour')
 
+# %% Gini score plot
 
-normal_count.transpose().plot(kind='bar', stacked=True)
-PCA_count.transpose().plot(kind='bar', stacked=True)
+n_scores = list()
+p_scores = list()
+for n in range(2,33):
+    n_count, p_count = PCA_cluster(n)
+    n_scores.append(np.mean(gini_score(n_count)))
+    p_scores.append(np.mean(gini_score(n_count)))
+pl.plot(n_scores)
+pl.plot(p_scores)
+pl.show()
