@@ -74,7 +74,67 @@ count = count_clusters(labs.reset_index(), counter='cluster', grouper1='sample',
 
 count.transpose().plot(kind='bar', stacked=True)
 pl.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
+
 pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
 pl.title('K-means after t-SNE')
+pl.show()
+
+# %% gini score plots
+np.mean(gini_score(count))
+# reminder: a lower gini score is better. So this score of 0.2 is good!
+
+scores5=list()
+scores10=list()
+scores30=list()
+scores50=list()
+scores80=list()
+scores100=list()
+scores=[scores5, scores10, scores30, scores50, scores80, scores100]
+x = [*range(2,33)]
+
+names = vals.index.get_level_values(0)
+cols = vals.index.get_level_values(1)
+cols=cols.str.lstrip('val_')
+samples=names.str.lstrip('SUM_').str[0:18].str.rstrip('_stack')
+slices = names.str[-7:].str.lstrip('_')
+
+
+for i in range(len(perp_vals)):
+    score=list()
+    tsne = manifold.TSNE(n_components=2, init='pca', random_state=0, perplexity=perp_vals[i])
+    dat_tsne = tsne.fit_transform(s_vals)
+    for n in x:
+        np.random.seed(1234)
+        km = KMeans(n_clusters = n)
+        kmeans_fit=km.fit(dat_tsne)
+        labs = pd.DataFrame(kmeans_fit.labels_, index=vals.index, columns=['cluster'])
+        labs['colour'] = cols
+        labs['sample'] = samples
+        labs['slice'] = slices
+        count = count_clusters(labs.reset_index(), counter='cluster', grouper1='sample', grouper2='colour')
+        scores[i].append(np.mean(gini_score(count)))
+    pl.plot(x, scores[i], label=str(perp_vals[i]))
+pl.xlabel('Number of clusters')
+pl.ylabel('Gini score')
+pl.legend(title='t-SNE Perplexity')
+pl.savefig('/Users/s1101153/Dropbox/Emily/Graphs/t-SNE_perplexity_clust-num_gini.png')
+pl.show()
+
+
+# I might also update the PCA_droplets.py gini scree plot to include t-SNE along with the other methods
+
+# %% to be removed
+n_scores = list()
+p_scores = list()
+for n in range(2,33):
+    n_count, p_count = PCA_cluster(n)
+    n_scores.append(np.mean(gini_score(n_count)))
+    p_scores.append(np.mean(gini_score(p_count)))
+pl.plot(n_scores, label='K-means only')
+pl.plot(p_scores, label = 'PCA + k-means')
+pl.xlabel('Number of clusters')
+pl.ylabel('Gini score')
+pl.legend()
+pl.savefig('/Users/s1101153/Dropbox/Emily/Graphs/PCA_raw_gini_comp.png')
 pl.show()
