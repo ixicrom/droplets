@@ -135,10 +135,13 @@ for i in np.arange(1,32):
     toCount = labels.reset_index()
     clust_count = count_clusters(toCount, counter='cluster', grouper1='sample', grouper2='colour')
     score = np.mean(gini_score(clust_count))
-    scores.append(1-score)
+    scores.append(score)
 
 
 pl.plot(np.arange(1,32),scores)
+pl.xlabel('Number of clusters')
+pl.ylabel('Gini score')
+pl.savefig('/Users/s1101153/Dropbox/Emily/Plots/k-means_scree.svg')
 pl.show()
 
 
