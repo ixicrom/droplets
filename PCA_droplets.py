@@ -136,13 +136,15 @@ for n in range(2,17):
 
 n_scores = list()
 p_scores = list()
-for n in range(2,33):
+x = [*range(2,33)]
+for n in x:
     n_count, p_count = PCA_cluster(n)
     n_scores.append(np.mean(gini_score(n_count)))
     p_scores.append(np.mean(gini_score(p_count)))
-pl.plot(n_scores, label='K-means only')
-pl.plot(p_scores, label = 'PCA + k-means')
+pl.plot(x, n_scores, label='K-means only')
+pl.plot(x, p_scores, label = 'PCA + k-means')
 pl.xlabel('Number of clusters')
 pl.ylabel('Gini score')
 pl.legend()
+pl.savefig('/Users/s1101153/Dropbox/Emily/Graphs/PCA_raw_gini_comp.png')
 pl.show()
