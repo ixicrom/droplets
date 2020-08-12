@@ -123,18 +123,3 @@ pl.show()
 
 
 # I might also update the PCA_droplets.py gini scree plot to include t-SNE along with the other methods
-
-# %% to be removed
-n_scores = list()
-p_scores = list()
-for n in range(2,33):
-    n_count, p_count = PCA_cluster(n)
-    n_scores.append(np.mean(gini_score(n_count)))
-    p_scores.append(np.mean(gini_score(p_count)))
-pl.plot(n_scores, label='K-means only')
-pl.plot(p_scores, label = 'PCA + k-means')
-pl.xlabel('Number of clusters')
-pl.ylabel('Gini score')
-pl.legend()
-pl.savefig('/Users/s1101153/Dropbox/Emily/Graphs/PCA_raw_gini_comp.png')
-pl.show()
