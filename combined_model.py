@@ -76,6 +76,8 @@ slice_nums
 dat_all['slices']=slice_nums
 dat_all.rename(columns={'slices':'slice'}, inplace=True)
 
+
+# do I need to remove this bit? Although if I don't use this code much later then it doesn't matter
 x=dat_all['sample']
 change_bool = (x=='T6M_30_1') | (x=='T6M_29_1')
 
