@@ -246,9 +246,13 @@ for point in c.keys():
         edgecolors=clr_km[point[2]],
         facecolors='none',
         label=point[2])
+handles, labels = pl.gca().get_legend_handles_labels()
+by_label = dict(zip(labels, handles))
 pl.title('K-means clusters plotted on phi_r vs phi_p\n(size indicates number of points in that position)')
 pl.xlabel('phi_p')
 pl.ylabel('phi_r')
-pl.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1.0,0.5), title='K-means cluster')
-# pl.text(1.1, 0.6, 'Size indicates number of \npoints in that position')
+leg = pl.legend(by_label.values(), by_label.keys(), loc='center left',
+                bbox_to_anchor=(1.0,0.5), title='K-means cluster')
+for i in range(5):
+    leg.legendHandles[i]._sizes=[30]
 pl.show()
