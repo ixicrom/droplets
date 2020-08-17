@@ -53,7 +53,7 @@ def h_cluster(dat_forLearning, cut_num, showPlot = True):
     Z_clusters = Z_results[1].values
     clusters_h = [x[0] for x in Z_clusters]
     Z_results[1] = clusters_h
-    Z_results.index = [samples, colours, slices]
+    Z_results.index = dat_forLearning.index
     Z_results.columns = ['Image','Cluster_hier']
     Z_results = Z_results.drop(columns='Image')
     return Z_results
