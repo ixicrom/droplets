@@ -6,19 +6,19 @@ import numpy as np
 from sklearn import cluster
 from sklearn.decomposition import PCA
 from collections import Counter
-
+from sklearn import manifold
 
 # variables for testing_________________________________________________________
-filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
-
-n_clust=5
-show_dendro=False
-
-col_name='k-cluster'
-
-cluster_dat=h
-plot_col_name='Cluster_hier'
-plot_title='Hierarchical cluster plot'
+# filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
+#
+# n_clust=5
+# show_dendro=False
+#
+# col_name='k-cluster'
+#
+# cluster_dat=h
+# plot_col_name='Cluster_hier'
+# plot_title='Hierarchical cluster plot'
 
 
 # functions for getting data in desired format__________________________________
@@ -81,7 +81,7 @@ def read_format_rectangles(filePath, scale, theta_av=True):
         scaler = MinMaxScaler()
         vals_scaled = scaler.fit_transform(dat)
         dat = pd.DataFrame(vals_scaled, index=dat.index)
-    elif scale == 'standard'
+    elif scale == 'standard':
         scaler = StandardScaler()
         vals_scaled = scaler.fit_transform(dat)
         dat = pd.DataFrame(vals_scaled, index=dat.index)
@@ -108,18 +108,22 @@ def read_format_rectangles(filePath, scale, theta_av=True):
     phir=samples.str[10:15].str.lstrip('phir').str.rstrip('_2')
 
     dat.insert(0,'phir', phir.astype(int))
-    dat.insert(0,'phip', phip.str.replace('-', '.').astype(int))
+    dat.insert(0,'phip', phip.str.replace('-', '.').astype(float))
 
     dat = dat.set_index(['sample', 'colour', 'slice', 'phip', 'phir'])
     dat
     return dat
 
-def read_calc_format_wedges(reslice = False, imPath = None, infoFile = None,
-hp = False, scale):
+def read_calc_format_wedges(scale, fileName, reslice, imPath = None, infoFile = None, hp = False):
     '''
     Inputs:
-        reslice=True: will calculate slices from files in imPath using info from infoFile, and save to '/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl'
-        reslice=False: will read in wedge slices from '/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl'
+        scale='minmax': uses MinMaxScaler on all value columns
+        scale='standard': uses StandardScaler on all value columns
+
+        fileName: file to either read from or save to
+
+        reslice=True: will calculate slices from files in imPath using info from infoFile, and save to fileName
+        reslice=False: will read in wedge slices from fileName
 
         imPath: folder for reslicing. Should contain tif images to be sliced, each with 2 channels (green and red). Shape should be (n, n, 2).
 
@@ -136,8 +140,6 @@ hp = False, scale):
 
         hp: toggle for whether to apply a highpass filter to the images before thresholding
 
-        scale='minmax': uses MinMaxScaler on all value columns
-        scale='standard': uses StandardScaler on all value columns
 
     Output:
         384 rows x 6 columns
@@ -152,22 +154,32 @@ hp = False, scale):
 
     if reslice:
         print('Re-calculating slices...')
-        sFile = input('Input filepath for saving: ')
-        slices = slice_folder(imPath, infoFile, save=True, saveFile='/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl')
+        # sFile = input('Input filepath for saving: ')
+        slices = slice_folder(imPath, infoFile, save=True, saveFile=fileName)
     else:
-        slices = pd.read_pickle('/Users/s1101153/Desktop/droplet_stacks/63x/nice_slices.pkl')
+        slices = pd.read_pickle(fileName)
 
 
     slices_data = calc_variables(slices, highpass = hp)
 
-    slices_data = slices_data.drop('imArray', axis=1)
+    slices_data = slices_data.reset_index()
+    samples = slices_data['sample']#.str.slice(4,21).str.rstrip('_stack')
+    phip=samples.str[0:7].str.strip('_phi')
+    phir=samples.str[10:15].str.lstrip('phir').str.rstrip('_2')
+
+    slices_data.insert(0,'phir', phir.astype(int))
+    slices_data.insert(0,'phip', phip.str.replace('-', '.').astype(float))
+
+    slices_data = slices_data.set_index(['sample', 'colour', 'slice', 'phip', 'phir'])
+
+    slices_data = slices_data.drop('imArray', axis=1).dropna()
 
     if scale=='minmax':
         scaler = MinMaxScaler()
         vals_scaled = scaler.fit_transform(slices_data)
         slices_data = pd.DataFrame(vals_scaled, index=slices_data.index, columns=slices_data.columns)
 
-    elif scale == 'standard'
+    elif scale == 'standard':
         scaler = StandardScaler()
         vals_scaled = scaler.fit_transform(slices_data)
         slices_data = pd.DataFrame(vals_scaled, index=slices_data.index, columns=slices_data.columns)
@@ -181,10 +193,11 @@ def PCA_transform(dat, var):
     np.random.seed(1234)
     pca = PCA(var).fit(dat)
     dat_PCA = pca.transform(dat)
+    dat_PCA = pd.DataFrame(dat_PCA, index=dat.index)
     return pca, dat_PCA
 
-def tSNE_transform(dat, p):
-    tsne = manifold.TSNE(n_components=2, init='pca', random_state=0, perplexity=p)
+def tSNE_transform(dat, p, r_state=0):
+    tsne = manifold.TSNE(n_components=2, init='pca', random_state=r_state, perplexity=p)
     dat_tsne = tsne.fit_transform(dat)
     return dat_tsne
 
@@ -208,27 +221,63 @@ def kmeans(dat, n_clust, col_name):
                             grouper1='sample', grouper2 = 'colour')
     return labs, k_count
 
-def cluster(method, dat, n_clust):
+def clust(method, dat, n_clust, col_name=""):
     if method == 'h':
-        h_count = hier(dat, n_clust, False)
+        count = hier(dat, n_clust, False)
 
-    elif method == 'k'
-        k_count = kmeans(dat, n_clust)
+    elif method == 'k':
+        count = kmeans(dat, n_clust, col_name)
     else:
         print('Invalid method input. Use \'h\' for hierarchical clustering or \'k\' for k-means clustering.')
+    return count
 
 
 # functions for visualisation
-def gini_score_(method, dat, start_num, stop_num):
+def gini_score_range(method, dat, start_num, stop_num):
     score = list()
     for i in range(start_num, stop_num):
-        count = cluster(method, dat, i)
-        score.append(gini_score(count))
+        count = clust(method, dat, i, col_name='cluster')[1]
+        score.append(np.mean(gini_score(count)))
     return score
 
-def tSNE_plot():
+def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
+    '''
+    Plots col_dat on coordinates specified in dat_tsne.
 
+    Inputs:
+        dat_tsne: n x 2 DataFrame
+        col_dat: n x 1 series or index, in same order as dat_tsne
+        plot_title: string
+        **pl_kwargs: additional inputs for plotting with pl.scatter. Suggest setting alpha=0.7.
 
+    Outputs:
+        Displays a scatter plot of each coordinate in dat_tsne, with colour
+
+    '''
+    col_unique = col_dat.unique().values
+    n_colours = len(col_unique)
+    if n_colours>10:
+        cmap = pl.get_cmap('tab20')
+        plot_colours = cmap(np.linspace(start=0, stop=1, num=n_colours))
+    elif n_colours>5:
+        cmap = pl.get_cmap('tab10')
+        plot_colours = cmap(np.linspace(start=0, stop=1, num=n_colours))
+    else:
+        cmap = pl.get_cmap('tab10')
+        plot_colours = cmap(np.linspace(start=0, stop=0.5, num=n_colours))
+
+    clr = {col_unique[i]: plot_colours[i] for i in range(n_colours)}
+
+    for point in range(dat_tsne.shape[0]):
+        pl.scatter(dat_tsne[point,0], dat_tsne[point,1],
+                    color = clr[col_dat[point]],
+                    label = col_dat[point],
+                    **pl_kwargs)
+    handles, labels = pl.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    pl.title(plot_title)
+    pl.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1.0,0.5))
+    pl.show()
 
 def phi_plot(cluster_dat, plot_col_name, plot_title):
     cluster_dat
@@ -260,4 +309,10 @@ def phi_plot(cluster_dat, plot_col_name, plot_title):
                     bbox_to_anchor=(1.0,0.5), title='Cluster')
     for i in clusters:
         leg.legendHandles[i]._sizes=[30]
+    pl.show()
+
+
+def bar_stack(count_dat):
+    count_dat.transpose().plot(kind='bar', stacked=True)
+    pl.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
     pl.show()
