@@ -92,7 +92,7 @@ def slice_all(datFile, filePath, save=False):
     return all_slices
 
 
-def read_files(folderName, dropNans = True):
+def read_files(folderName, dropNans = True, oldFileType=False):
     search=os.path.join(folderName, "*.pkl")
     file_names=glob.glob(search)#folderName+x for x in os.listdir(folderName)]
     dat=[]
@@ -102,7 +102,6 @@ def read_files(folderName, dropNans = True):
         entry.columns.names=['vars']
         dat.append(entry)
         # making nice column names_______
-        oldFileType=False
         if oldFileType:
             start1=file.find("T")
             end1=file.find("_63xoil")
