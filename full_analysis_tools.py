@@ -7,6 +7,8 @@ from sklearn import cluster
 from sklearn.decomposition import PCA
 from collections import Counter
 from sklearn import manifold
+import math
+from os import path
 
 # variables for testing_________________________________________________________
 # filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
@@ -20,11 +22,118 @@ from sklearn import manifold
 # plot_col_name='Cluster_hier'
 # plot_title='Hierarchical cluster plot'
 
+# imFile = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/SUM_phip0-5_phir10_2_stack.tif'
+# um=99.84
+# L=1025
+# C_x_um=52.249
+# C_y_um=51.735
+#
+# r_min=None
+# r_max=None
+#
+# n_slices=12
+# n_theta=100
+# saveFile=False
+
+
+
+# functions for making rectangular slices from images
+def rectangle_slice(imFile, um, L, C_x_um, C_y_um, n_slices, n_theta, r_min=None, r_max=None, savePath=None):
+    imArr = io.imread(imFile)
+    imArr.shape
+    imGreen=imArr[:,:,0]
+    imRed=imArr[:,:,1]
+
+    pixel_um=L/um #conversion from microns to pixels
+
+    #convert centre coordinates to pixels
+    C_x=C_x_um*pixel_um
+    C_y=C_y_um*pixel_um
+
+    if r_min==None:
+        r_min=0
+
+    slices=[] #list to add results to
+    keys=[]
+    for slice in range(n_slices):
+        #create empty arrays for each output value for this slice
+        r_dat=[]
+        theta_dat=[]
+        val_dat_g=[]
+        val_dat_r=[]
+        sample_name=[]
+        slice_num=[]
+        if r_max==None:
+            r_max=int(L-max(C_x, C_y))
+
+        samp = path.split(imFile)[1][:-10]
+        keys.append(samp+'_slice'+str(slice))
+        for r in range(r_min, r_max):
+            for i in range(n_theta): #loop through how many theta values we want
+                theta=2*math.pi/n_slices * i/n_theta #theta for output, values from 0 to 2pi/n_slices
+                theta_calc=theta + slice*2*math.pi/n_slices #theta for calculating points, values from 0 to 2pi
+                x_cent=r*math.cos(theta_calc) #point to plot, x relative to centre of image
+                y_cent=r*math.sin(theta_calc) #point to plot, y relative to centre of image
+                #convert points to plot so they're relative to the corner of the image
+                x=x_cent+C_x
+                y=y_cent+C_y
+                #append values to arrays
+                theta_dat.append(theta)
+                r_dat.append(r)
+                val_dat_g.append(imGreen[round(x),round(y)])
+                val_dat_r.append(imRed[round(x),round(y)])
+                sample_name.append(samp)
+                slice_num.append(slice)
+
+        #collect different values into a dataframe, and append it to the slices array
+        points = pd.DataFrame([r_dat,theta_dat,val_dat_g, val_dat_r]).transpose()
+        points.columns=['r','theta','val_green','val_red']
+        points.columns.names=['vars']
+        slices.append(points)
+        # if saveFile:
+        #     saveName=imFile+"_slice"+str(slice)+".pkl"
+        #     points.to_pickle(saveName)
+
+    slice_df=pd.concat(slices, axis=1, keys=keys, names=['slices'])
+    if savePath != None:
+        saveName=path.split(imFile)[1][:-4]+'_rectangle_slices.pkl'
+        saveFile=path.join(savePath, saveName)
+        slice_df.to_pickle(saveFile)
+        print('File saved:' + str(saveFile))
+    return slice_df
+
+def slice_info_file(infoFile, imPath, n_slice, n_theta, r_min=None, r_max=None, savePath=None):
+    f=open(infoFile, 'r')
+    all_slices=[]
+    for line in f.readlines():
+        if line.startswith("SUM"):
+            vals=line.split(",")
+            imFile = path.join(imPath,vals[0])
+            umSize=float(vals[1])
+            pxSize=int(vals[2])
+            Cx=float(vals[4])
+            Cy=float(vals[3])
+            n_slice = 12
+            im_slices=rectangle_slice(imFile=imFile, um=umSize, L=pxSize, C_x_um=Cx, C_y_um=Cy, n_slices=n_slice, n_theta=n_theta, r_min=r_min, r_max=r_max, savePath=savePath)
+            all_slices.append(im_slices)
+
+    return pd.concat(all_slices, axis=1).dropna()
+
+def read_rectangle_folder(folderName):
+    folderName='/Users/s1101153/Desktop/droplet_stacks/63x/final_images/rectangle_slices/'
+    slices=[]
+    search=os.path.join(folderName, "*.pkl")
+    file_names=glob.glob(search)
+    for file in file_names:
+        slices.append(pd.read_pickle(file))
+    slices_all = pd.concat(slices, axis=1).dropna()
+
+    return slices_all
 
 # functions for getting data in desired format__________________________________
-def read_format_rectangles(filePath, scale, theta_av=True):
+def format_rectangles(dat, scale, theta_av=True):
     '''
-    Reads in pickles from filePath and reformats dataframe ready for clustering.
+    Reformats dataframe (as output from rectangle_slice or slice_tools.read_file) ready for clustering.
     Initial format:
         27300 rows × 768 columns
         Columns:
@@ -44,7 +153,7 @@ def read_format_rectangles(filePath, scale, theta_av=True):
 
     Output:
         theta_av=True:
-            384 rows x 273 columns
+            (no. images * 12) rows x (no. r-values) columns
             MultiIndex:
                 sample = sample ID eg phip0-5_phir10_2
                 colour = green or red
@@ -54,7 +163,7 @@ def read_format_rectangles(filePath, scale, theta_av=True):
             Columns:
                 0 to 272 (each r value)
         theta_av=False:
-            384 rows x 27300 columns
+            (no. images * 12) rows x (no. r-values * 100) columns
             MultiIndex:
                 sample = sample ID eg phip0-5_phir10_2
                 colour = green or red
@@ -65,8 +174,9 @@ def read_format_rectangles(filePath, scale, theta_av=True):
                 0 to 27299 (each r x theta combo)
 
     '''
-
+    filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
     dat = read_files(filePath)
+    # dat
     idx = pd.IndexSlice
 
     if theta_av:
@@ -90,7 +200,7 @@ def read_format_rectangles(filePath, scale, theta_av=True):
 
     dat = dat.reset_index()
 
-    samples = dat['slices'].str.slice(4,21).str.rstrip('_stack')
+    samples = dat['slices'].str.slice(4,21).str.rstrip('_stack').str.rstrip('_slice')
     dat.insert(0, 'sample', samples)
 
 
@@ -111,7 +221,6 @@ def read_format_rectangles(filePath, scale, theta_av=True):
     dat.insert(0,'phip', phip.str.replace('-', '.').astype(float))
 
     dat = dat.set_index(['sample', 'colour', 'slice', 'phip', 'phir'])
-    dat
     return dat
 
 def read_calc_format_wedges(scale, fileName, reslice, imPath = None, infoFile = None, hp = False):
