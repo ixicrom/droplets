@@ -7,10 +7,11 @@ import pandas as pd
 filePath = '/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
 imagePath = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/'
 
-r_dat = read_format_rectangles(filePath=filePath, scale='standard', theta_av=True)
+dat=read_files(filePath)
+r_dat = format_rectangles(dat, scale='standard', theta_av=True)
 
-rect_dat = read_format_rectangles(filePath=filePath, scale='standard', theta_av=False)
-
+rect_dat = format_rectangles(dat, scale='standard', theta_av=False)
+rect_dat
 
 # %% wedge data
 infoFileOld = '/Users/s1101153/Desktop/droplet_stacks/63x/stack_info.csv'
