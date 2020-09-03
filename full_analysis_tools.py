@@ -50,7 +50,7 @@ def rectangle_slice(imFile, um, L, C_x_um, C_y_um, n_slices, n_theta, r_min=None
     C_x=C_x_um*pixel_um
     C_y=C_y_um*pixel_um
 
-    if r_min==None:
+    if r_min==None or r_min<0:
         r_min=0
 
     slices=[] #list to add results to
@@ -63,7 +63,7 @@ def rectangle_slice(imFile, um, L, C_x_um, C_y_um, n_slices, n_theta, r_min=None
         val_dat_r=[]
         sample_name=[]
         slice_num=[]
-        if r_max==None:
+        if r_max==None or r_max>int(L-max(C_x, C_y)):
             r_max=int(L-max(C_x, C_y))
 
         samp = path.split(imFile)[1][:-10]
@@ -120,7 +120,6 @@ def slice_info_file(infoFile, imPath, n_slice, n_theta, r_min=None, r_max=None, 
     return pd.concat(all_slices, axis=1).dropna()
 
 def read_rectangle_folder(folderName):
-    folderName='/Users/s1101153/Desktop/droplet_stacks/63x/final_images/rectangle_slices/'
     slices=[]
     search=os.path.join(folderName, "*.pkl")
     file_names=glob.glob(search)
@@ -174,9 +173,7 @@ def format_rectangles(dat, scale, theta_av=True):
                 0 to 27299 (each r x theta combo)
 
     '''
-    filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
-    dat = read_files(filePath)
-    # dat
+
     idx = pd.IndexSlice
 
     if theta_av:
@@ -229,7 +226,7 @@ def read_calc_format_wedges(scale, fileName, reslice, imPath = None, infoFile = 
         scale='minmax': uses MinMaxScaler on all value columns
         scale='standard': uses StandardScaler on all value columns
 
-        fileName: file to either read from or save to
+        fileName: file to either read from or save to (depending on value of reslice)
 
         reslice=True: will calculate slices from files in imPath using info from infoFile, and save to fileName
         reslice=False: will read in wedge slices from fileName
