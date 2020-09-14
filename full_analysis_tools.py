@@ -11,7 +11,7 @@ import math
 from os import path
 import glob
 import os
-import pyplot as pl
+import matplotlib.pyplot as pl
 
 # variables for testing________________________________________________________
 # filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'

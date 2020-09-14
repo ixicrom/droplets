@@ -143,7 +143,7 @@ pl.plot(circ_1['phir'], circ_1['Circularity_sum'],
 pl.xlabel('phi_r')
 pl.ylabel('Circularity')
 pl.title('Preliminary circularity plot')
-pl.legend(loc='center left', bbox_to_anchor=(1.0,0.5))
+pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 time = datetime.now().strftime('%Y-%m-%d_%H%M')
 saveFile = '/Users/s1101153/Dropbox/Emily/Graphs/circularity/'+time
 pl.savefig(saveFile)
