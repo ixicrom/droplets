@@ -3,6 +3,7 @@ import os
 import matplotlib.pyplot as pl
 import seaborn as sb
 
+# %% setup
 minFiles = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/aggregates_minority/'
 majFiles = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/aggregates_majority/'
 
@@ -54,6 +55,7 @@ maj_col = {'phip1_phir25_2.csv': 'green',
            'phip0-5_phir60.csv': 'red',
            'phip0-5_phir75.csv': 'red'}
 
+# %% read in data from files
 agg_frac = []
 droplet_cat = []
 colour = []
@@ -90,11 +92,12 @@ maj_dat = pd.DataFrame([maj_drop_cat, agg_frac_maj, colour_maj]).transpose()
 maj_dat.columns = ['Droplet shape', 'Aggregate area fraction', 'Particle']
 maj_dat['Channel'] = ['Majority']*maj_dat.shape[0]
 
-plot_dat2 = pd.concat([maj_dat, min_dat]).reset_index()
-plot_dat2['Aggregate area fraction'] = plot_dat2['Aggregate area fraction'].astype('float64')
-plot_dat2
+plot_dat = pd.concat([maj_dat, min_dat]).reset_index()
+plot_dat['Aggregate area fraction'] = plot_dat['Aggregate area fraction'].astype('float64')
+plot_dat
 
-g = sb.violinplot(data=plot_dat2,
+# %% min/maj split plot
+g = sb.violinplot(data=plot_dat,
                   x='Droplet shape',
                   y='Aggregate area fraction',
                   hue='Channel',
@@ -104,7 +107,7 @@ g = sb.violinplot(data=plot_dat2,
                   palette='pastel',
                   legend=False,
                   scale='area')
-sb.swarmplot(data=plot_dat2,
+sb.swarmplot(data=plot_dat,
              x='Droplet shape',
              y='Aggregate area fraction',
              hue='Channel')
@@ -112,7 +115,8 @@ pl.legend(loc='lower left')
 pl.title('Aggregate area fraction')
 pl.show()
 
-g = sb.violinplot(data=plot_dat2.drop(24),
+# %% min/maj split plot with outlier removed (not sure this is valid though)
+g = sb.violinplot(data=plot_dat.drop(24),
                   x='Droplet shape',
                   y='Aggregate area fraction',
                   hue='Channel',
@@ -121,7 +125,7 @@ g = sb.violinplot(data=plot_dat2.drop(24),
                   linewidth=1,
                   palette='pastel',
                   legend=False)
-sb.swarmplot(data=plot_dat2.drop(24),
+sb.swarmplot(data=plot_dat.drop(24),
              x='Droplet shape',
              y='Aggregate area fraction',
              hue='Channel')
@@ -129,7 +133,8 @@ pl.legend(loc='lower right')
 pl.title('Aggregate area fraction (outliers removed)')
 pl.show()
 
-g = sb.violinplot(data=plot_dat2,
+# %% red/green split plot
+g = sb.violinplot(data=plot_dat,
                   x='Droplet shape',
                   y='Aggregate area fraction',
                   hue='Particle',
@@ -138,7 +143,7 @@ g = sb.violinplot(data=plot_dat2,
                   linewidth=1,
                   palette='pastel',
                   legend=False)
-sb.swarmplot(data=plot_dat2,
+sb.swarmplot(data=plot_dat,
              x='Droplet shape',
              y='Aggregate area fraction',
              hue='Particle')
@@ -146,8 +151,8 @@ pl.legend(loc='lower left')
 pl.title('Aggregate area fraction by particle type')
 pl.show()
 
-
-g = sb.violinplot(data=plot_dat2,
+# %% min/maj side-by-side plots
+g = sb.violinplot(data=plot_dat,
                   x='Channel',
                   y='Aggregate area fraction',
                   hue='Droplet shape',
@@ -159,8 +164,8 @@ g = sb.violinplot(data=plot_dat2,
 pl.legend(loc='lower left')
 pl.show()
 
-
-g = sb.violinplot(data=plot_dat2,
+# %% red/green side-by-side plots
+g = sb.violinplot(data=plot_dat,
                   x='Particle',
                   y='Aggregate area fraction',
                   hue='Droplet shape',
