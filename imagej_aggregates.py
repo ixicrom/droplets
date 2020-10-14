@@ -130,7 +130,7 @@ sb.swarmplot(data=plot_dat.drop(24),
              y='Aggregate area fraction',
              hue='Channel')
 pl.legend(loc='lower right')
-pl.title('Aggregate area fraction (outliers removed)')
+pl.title('Aggregate area fraction (outlier removed)')
 pl.show()
 
 # %% red/green split plot
