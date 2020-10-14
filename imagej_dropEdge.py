@@ -58,6 +58,7 @@ maj_col = {'phip1_phir25_2.csv': 'green',
 # %% read in data from both channels
 drop_circ = []
 area_perim = []
+round = []
 droplet_cat = []
 colour = []
 for file in os.listdir(minFiles):
@@ -67,12 +68,15 @@ for file in os.listdir(minFiles):
         a_p = (dat['Area']/dat['Perim.']).values[0]
         drop_circ.append(dat['Circ.'].values[0])
         area_perim.append(a_p)
+        r = (dat['Circ.']/dat['Round']).values[0]
+        round.append(r)
         droplet_cat.append(categories[file])
         colour.append(min_col[file])
 
 drop_circ_maj = []
 area_perim_maj = []
 agg_frac_maj = []
+round_maj = []
 drop_cat_maj = []
 colour_maj = []
 for file in os.listdir(majFiles):
@@ -82,21 +86,25 @@ for file in os.listdir(majFiles):
         a_p = (dat['Area']/dat['Perim.']).values[0]
         drop_circ_maj.append(dat['Circ.'].values[0])
         area_perim_maj.append(a_p)
+        r = (dat['Circ.']/dat['Round']).values[0]
+        round_maj.append(r)
         drop_cat_maj.append(categories[file])
         colour_maj.append(maj_col[file])
 
-min_dat = pd.DataFrame([droplet_cat, drop_circ, area_perim, colour]).transpose()
-min_dat.columns = ['Droplet shape', 'Droplet circularity', 'Droplet area per perimeter', 'Particle']
+min_dat = pd.DataFrame([droplet_cat, drop_circ, area_perim, round, colour]).transpose()
+min_dat.columns = ['Droplet shape', 'Droplet circularity', 'Droplet area per perimeter', 'Droplet circularity/roundness', 'Particle']
 min_dat['Channel'] = ['Minority']*min_dat.shape[0]
 min_dat['Droplet circularity'] = min_dat['Droplet circularity'].astype('float64')
 min_dat['Droplet area per perimeter'] = min_dat['Droplet area per perimeter'].astype('float64')
+min_dat['Droplet circularity/roundness'] = min_dat['Droplet circularity/roundness'].astype('float64')
 
-
-maj_dat = pd.DataFrame([drop_cat_maj, drop_circ_maj, area_perim_maj, colour_maj]).transpose()
-maj_dat.columns = ['Droplet shape', 'Droplet circularity', 'Droplet area per perimeter', 'Particle']
+maj_dat = pd.DataFrame([drop_cat_maj, drop_circ_maj, area_perim_maj, round_maj, colour_maj]).transpose()
+maj_dat.columns = ['Droplet shape', 'Droplet circularity', 'Droplet area per perimeter', 'Droplet circularity/roundness', 'Particle']
 maj_dat['Channel'] = ['Majority']*maj_dat.shape[0]
 maj_dat['Droplet circularity'] = maj_dat['Droplet circularity'].astype('float64')
 maj_dat['Droplet area per perimeter'] = maj_dat['Droplet area per perimeter'].astype('float64')
+maj_dat['Droplet circularity/roundness'] = maj_dat['Droplet circularity/roundness'].astype('float64')
+
 
 plot_dat = pd.concat([maj_dat, min_dat]).reset_index()
 # plot_dat['Droplet circularity'] = plot_dat['Droplet circularity'].astype('float64')
@@ -222,4 +230,40 @@ sb.swarmplot(data=maj_dat,
              x='Droplet shape',
              y='Droplet circularity')
 pl.title('Majority channel droplet circularity')
+pl.show()
+
+# %% circularity/roundness plot all data
+g = sb.violinplot(data=plot_dat,
+                  x='Droplet shape',
+                  y='Droplet circularity/roundness',
+                  inner='quartile',
+                  palette='pastel')
+sb.swarmplot(data=plot_dat,
+             x='Droplet shape',
+             y='Droplet circularity/roundness')
+pl.title('All channels droplet circularity per roundness')
+pl.show()
+
+# %% circularity/roundness plot majority channel
+g = sb.violinplot(data=maj_dat,
+                  x='Droplet shape',
+                  y='Droplet circularity/roundness',
+                  inner='quartile',
+                  palette='pastel')
+sb.swarmplot(data=maj_dat,
+             x='Droplet shape',
+             y='Droplet circularity/roundness')
+pl.title('Majority channel droplet circularity per roundness')
+pl.show()
+
+
+# %% 
+g = sb.boxplot(data=maj_dat,
+                  x='Droplet shape',
+                  y='Droplet circularity/roundness',
+                  palette='pastel')
+sb.swarmplot(data=maj_dat,
+             x='Droplet shape',
+             y='Droplet circularity/roundness')
+pl.title('Majority channel droplet circularity per roundness')
 pl.show()
