@@ -5,8 +5,8 @@ from sklearn import cluster
 import numpy as np
 import matplotlib.pyplot as pl
 
-filePath = '/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
-imagePath = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/'
+filePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+imagePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/'
 
 dat = read_files(filePath)
 r_dat = format_rectangles(dat, scale='standard', theta_av=True)

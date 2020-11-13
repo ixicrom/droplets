@@ -162,6 +162,7 @@ g = sb.violinplot(data=plot_dat,
                   legend=False,
                   scale='area')
 pl.legend(loc='lower left')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_min-maj.png')
 pl.show()
 
 # %% red/green side-by-side plots
@@ -175,4 +176,5 @@ g = sb.violinplot(data=plot_dat,
                   legend=False,
                   scale='area')
 pl.legend(loc='lower left')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_red-green.png')
 pl.show()

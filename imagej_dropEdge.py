@@ -194,6 +194,7 @@ sb.swarmplot(data=plot_dat,
              x='Droplet shape',
              y='Droplet area per perimeter')
 pl.title('All channels droplet area per perimeter')
+pl.savefig('/Users/s1101153/Desktop/area_per_perim_all.png')
 pl.show()
 
 # %% circularity plot all data
@@ -206,6 +207,7 @@ sb.swarmplot(data=plot_dat,
              x='Droplet shape',
              y='Droplet circularity')
 pl.title('All channels droplet circularity')
+pl.savefig('/Users/s1101153/Desktop/circ_all.png')
 pl.show()
 
 # %% area/perimeter plot majority channel
@@ -218,6 +220,7 @@ sb.swarmplot(data=maj_dat,
              x='Droplet shape',
              y='Droplet area per perimeter')
 pl.title('Majority channel droplet area per perimeter')
+pl.savefig('/Users/s1101153/Desktop/area_per_perim_maj.png')
 pl.show()
 
 # %% circularity plot majority channel
@@ -230,6 +233,7 @@ sb.swarmplot(data=maj_dat,
              x='Droplet shape',
              y='Droplet circularity')
 pl.title('Majority channel droplet circularity')
+pl.savefig('/Users/s1101153/Desktop/circ_maj.png')
 pl.show()
 
 # %% circularity/roundness plot all data
@@ -242,6 +246,7 @@ sb.swarmplot(data=plot_dat,
              x='Droplet shape',
              y='Droplet circularity/roundness')
 pl.title('All channels droplet circularity per roundness')
+pl.savefig('/Users/s1101153/Desktop/circ_per_round_all.png')
 pl.show()
 
 # %% circularity/roundness plot majority channel
@@ -254,10 +259,24 @@ sb.swarmplot(data=maj_dat,
              x='Droplet shape',
              y='Droplet circularity/roundness')
 pl.title('Majority channel droplet circularity per roundness')
+pl.savefig('/Users/s1101153/Desktop/circ_per_round_maj.png')
+pl.show()
+
+# %% circularity/roundness plot minority channel
+g = sb.violinplot(data=min_dat,
+                  x='Droplet shape',
+                  y='Droplet circularity/roundness',
+                  inner='quartile',
+                  palette='pastel')
+sb.swarmplot(data=min_dat,
+             x='Droplet shape',
+             y='Droplet circularity/roundness')
+pl.title('Minority channel droplet circularity per roundness')
+pl.savefig('/Users/s1101153/Desktop/circ_per_round_min.png')
 pl.show()
 
 
-# %% 
+# %%
 g = sb.boxplot(data=maj_dat,
                   x='Droplet shape',
                   y='Droplet circularity/roundness',
@@ -266,4 +285,5 @@ sb.swarmplot(data=maj_dat,
              x='Droplet shape',
              y='Droplet circularity/roundness')
 pl.title('Majority channel droplet circularity per roundness')
+pl.savefig('/Users/s1101153/Desktop/circ_per_round_box.png')
 pl.show()
