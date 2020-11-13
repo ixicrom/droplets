@@ -38,6 +38,7 @@ def h_cluster(dat_forLearning, cut_num, showPlot = True):
     Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
     if showPlot:
         mydendro = dendrogram(Z, labels=dat_forLearning.index, truncate_mode='lastp')
+        plt.savefig('dendro.png')
         plt.show()
     Z_cut = hierarchy.cut_tree(Z, n_clusters = cut_num)
 
