@@ -469,7 +469,10 @@ def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
     handles, labels = pl.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
     pl.title(plot_title)
-    pl.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1.0, 0.5))
+    pl.legend(by_label.values(),
+              by_label.keys(),
+              loc='center left',
+              bbox_to_anchor=(1.0, 0.5))
     pl.show()
 
 
@@ -499,7 +502,12 @@ def phi_plot(cluster_dat, plot_col_name, plot_title, save_file=None):
     pl.title(plot_title+'\n(size indicates number of points in that position)')
     pl.xlabel('phi_p')
     pl.ylabel('phi_r')
-    leg = pl.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1.0, 0.5), title='Cluster')
+    leg = pl.legend(by_label.values(),
+                    by_label.keys(),
+                    loc='center left',
+                    bbox_to_anchor=(1.0, 0.5),
+                    title='Cluster')
+    pl.tight_layout()
     for i in clusters:
         leg.legendHandles[i]._sizes = [30]
     if save_file is not None:
@@ -559,16 +567,21 @@ def optimalK(data, nrefs=3, maxClusters=15):
                                       'gap': gap},
                                      ignore_index=True)
 
-    return (gaps.argmax() + 1, resultsdf)  # Plus 1 because index of 0 means 1 cluster is optimal, index 2 = 3 clusters are optimal
+    return (gaps.argmax() + 1, resultsdf)
+    # Plus 1 because index of 0 means 1 cluster is optimal, index 2 = 3 clusters are optimal
+
 
 # copied from data_tools
 def gini_score(cluster_freq):
     sample_scores = list() # make list for output scores
 
-    for col in cluster_freq.columns: # will calculate a score for each image
+    for col in cluster_freq.columns:
+    # will calculate a score for each image
         counts = cluster_freq[col].values
-        p = counts[counts!=0]/sum(counts) # remove all zeroes (those clusters aren't present so don't want to include) and normalise
+        p = counts[counts!=0]/sum(counts)
+        # remove all zeroes (those clusters aren't present so don't want to include) and normalise
         q = 1-p
-        G = sum(p*q) # calculate index
+        G = sum(p*q)
+        # calculate index
         sample_scores.append(G)
     return sample_scores
