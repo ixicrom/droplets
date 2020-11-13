@@ -1,4 +1,6 @@
-from processing_tools import *
+# from processing_tools import *
+from data_tools import theta_average, h_cluster, count_clusters
+from processing_tools import slice_folder, calc_variables
 import pandas as pd
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 from skimage import io
@@ -14,7 +16,8 @@ import os
 import matplotlib.pyplot as pl
 
 # variables for testing________________________________________________________
-# filePath='/Users/s1101153/Desktop/droplet_stacks/63x/rect_pickles'
+# folderName = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+# oldFileType = False
 #
 # n_clust=5
 # show_dendro=False
@@ -37,6 +40,39 @@ import matplotlib.pyplot as pl
 # n_slices=12
 # n_theta=100
 # saveFile=False
+
+# copied from slice_tools.py and improved
+def read_files(folderName, dropNans=True, oldFileType=False):
+    search = os.path.join(folderName, "*.pkl")
+    file_names = glob.glob(search)
+    dat = []
+    keys = []
+    for file in file_names:
+        entry = pd.read_pickle(file)  # actually reading the file
+        entry.columns.names = ['vars']
+        dat.append(entry.reset_index())
+        # making nice column names_______
+        if oldFileType:
+            start1 = file.find("T")
+            end1 = file.find("_63xoil")
+            part1 = file[start1:end1]
+            start2 = end1+7
+            end2 = start2+2
+            part2 = file[start2:end2]
+            start3 = file.find(".tif")+4
+            part3 = file[start3:]
+            key = part1+part2+part3
+            keys.append(str(key))
+        else:
+            name = os.path.basename(file)
+            # name[4:-4]
+            keys.append(name[:-4])
+        # ________________________________
+    # print([x for x in keys if keys.count(x) >= 2])
+    dat_df = pd.concat(dat, axis=1, keys=keys, names=['slices'])  # axis=1 for side-by-side. will do multi-layer column names
+    if dropNans:
+        dat_df = dat_df.dropna()
+    return dat_df
 
 
 # functions for making rectangular slices from images
@@ -437,7 +473,7 @@ def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
     pl.show()
 
 
-def phi_plot(cluster_dat, plot_col_name, plot_title):
+def phi_plot(cluster_dat, plot_col_name, plot_title, save_file=None):
     cluster_dat
     cmap = pl.get_cmap('tab10')
 
@@ -466,6 +502,8 @@ def phi_plot(cluster_dat, plot_col_name, plot_title):
     leg = pl.legend(by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1.0, 0.5), title='Cluster')
     for i in clusters:
         leg.legendHandles[i]._sizes = [30]
+    if save_file is not None:
+        pl.savefig(save_file)
     pl.show()
 
 
@@ -473,3 +511,64 @@ def bar_stack(count_dat):
     count_dat.transpose().plot(kind='bar', stacked=True)
     pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
     pl.show()
+
+
+def optimalK(data, nrefs=3, maxClusters=15):
+    """
+    FROM https://anaconda.org/milesgranger/gap-statistic/notebook
+    Calculates KMeans optimal K using Gap Statistic from Tibshirani, Walther, Hastie
+    Params:
+        data: ndarry of shape (n_samples, n_features)
+        nrefs: number of sample reference datasets to create
+        maxClusters: Maximum number of clusters to test for
+    Returns: (gaps, optimalK)
+    """
+    gaps = np.zeros((len(range(1, maxClusters)),))
+    resultsdf = pd.DataFrame({'clusterCount': [], 'gap': []})
+    for gap_index, k in enumerate(range(1, maxClusters)):
+
+        # Holder for reference dispersion results
+        refDisps = np.zeros(nrefs)
+
+        # For n references, generate random sample and perform kmeans getting resulting dispersion of each loop
+        for i in range(nrefs):
+
+            # Create new random reference set
+            randomReference = np.random.random_sample(size=data.shape)
+
+            # Fit to it
+            km = cluster.KMeans(k)
+            km.fit(randomReference)
+
+            refDisp = km.inertia_
+            refDisps[i] = refDisp
+
+        # Fit cluster to original data and create dispersion
+        km = cluster.KMeans(k)
+        km.fit(data)
+
+        origDisp = km.inertia_
+
+        # Calculate gap statistic
+        gap = np.log(np.mean(refDisps)) - np.log(origDisp)
+
+        # Assign this loop's gap statistic to gaps
+        gaps[gap_index] = gap
+
+        resultsdf = resultsdf.append({'clusterCount': k,
+                                      'gap': gap},
+                                     ignore_index=True)
+
+    return (gaps.argmax() + 1, resultsdf)  # Plus 1 because index of 0 means 1 cluster is optimal, index 2 = 3 clusters are optimal
+
+# copied from data_tools
+def gini_score(cluster_freq):
+    sample_scores = list() # make list for output scores
+
+    for col in cluster_freq.columns: # will calculate a score for each image
+        counts = cluster_freq[col].values
+        p = counts[counts!=0]/sum(counts) # remove all zeroes (those clusters aren't present so don't want to include) and normalise
+        q = 1-p
+        G = sum(p*q) # calculate index
+        sample_scores.append(G)
+    return sample_scores
