@@ -17,7 +17,7 @@ def theta_average(data, rCol = []):
     # remove a dimension by averaging over theta
     idx=pd.IndexSlice
     if rCol == []:
-        rCol = data.columns[0]
+        rCol = data.columns[1]
     data_means=data.groupby([rCol]).mean() #group by r for one of the slices, doesn't matter which one as they are all the same
 
     # take the green pixel values
