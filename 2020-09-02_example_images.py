@@ -2,15 +2,15 @@ from full_analysis_tools import *
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 import numpy as np
-import pyplot as pl
+import matplotlib.pyplot as pl
 
-infoFileA = '/Users/s1101153/Desktop/droplet_stacks/63x/stack_info_2020-08-28_A.csv'
+infoFileA = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/stack_info_2020-08-28_A.csv'
 # infoFileB='/Users/s1101153/Desktop/droplet_stacks/63x/stack_info_2020-08-28_B.csv'
-imagePath = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/'
+imagePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/'
 
 # %% read previously calculated slices
 
-rect_data_A = read_rectangle_folder('/Users/s1101153/Desktop/droplet_stacks/63x/final_images/rectangle_slices/A/')
+rect_data_A = read_rectangle_folder('/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/rectangle_slices/A/')
 # rect_data_B = read_rectangle_folder('/Users/s1101153/Desktop/droplet_stacks/63x/final_images/rectangle_slices/B/')
 
 # %% format data and make sure images are on the same scale with values 0-1
@@ -23,9 +23,9 @@ r_dat_A = format_rectangles(rect_data_A, scale='minmax', theta_av=True)
 
 
 # %% calculate wedge variables from slices already calculated
-wedge_dat_A = read_calc_format_wedges(scale='minmax', fileName='/Users/s1101153/Desktop/droplet_stacks/63x/final_images/wedge_slices_A_minmax.pkl', reslice=False, hp=False)
+wedge_dat_A = read_calc_format_wedges(scale='minmax', fileName='/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/wedge_slices_A_minmax.pkl', reslice=False, hp=False)
 
-wedge_dat_B = read_calc_format_wedges(scale='minmax', fileName='/Users/s1101153/Desktop/droplet_stacks/63x/final_images/wedge_slices_B_minmax.pkl', reslice=False, hp=False)
+wedge_dat_B = read_calc_format_wedges(scale='minmax', fileName='/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/wedge_slices_B_minmax.pkl', reslice=False, hp=False)
 
 
 # %% combine wedge and theta-averaged data

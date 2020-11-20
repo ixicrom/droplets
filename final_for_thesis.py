@@ -268,3 +268,86 @@ if input('Plot clusters on t-SNE axes? y/n: ') == 'y':
 #               bbox_to_anchor=(1.0, 0.5))
 #     pl.tight_layout()
 #     pl.show()
+
+
+# %% plots showing data input, copied lots from 2020-09-02_example_images.py
+
+# first grab some example images
+idx = pd.IndexSlice
+dat25_g = r_dat.loc[idx['phip0-5_phir25', 'green'], :]
+dat25_r = r_dat.loc[idx['phip0-5_phir25', 'red'], :]
+
+dat75_g = r_dat.loc[idx['phip0-5_phir75', 'green'], :]
+dat75_r = r_dat.loc[idx['phip0-5_phir75', 'red'], :]
+
+dat40_g = r_dat.loc[idx['phip0-5_phir40', 'green'], :]
+dat40_r = r_dat.loc[idx['phip0-5_phir40', 'red'], :]
+
+# now get the cluster labels
+labs25_r = h_labs.loc[idx['phip0-5_phir25', 'red'], :]
+labs25_g = h_labs.loc[idx['phip0-5_phir25', 'green'], :]
+
+labs75_r = h_labs.loc[idx['phip0-5_phir75', 'red'], :]
+labs75_g = h_labs.loc[idx['phip0-5_phir75', 'green'], :]
+
+labs40_r = h_labs.loc[idx['phip0-5_phir40', 'red'], :]
+labs40_g = h_labs.loc[idx['phip0-5_phir40', 'green'], :]
+
+
+# now see if the plot works!
+fig, axs = pl.subplots(3, 2, sharex=True, sharey=True)
+axs[0, 0].set_ylabel('slice')
+axs[0, 0].imshow(dat25_r)
+for i in range(dat25_r.shape[0]):
+    for j in range(dat25_r.shape[1]):
+        text = axs[0, 0].text(j, i, labs25_r.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[0, 0].set_title('phip=0.5, phir=25, red')
+
+axs[1, 0].set_ylabel('slice')
+axs[1, 0].imshow(dat25_g)
+for i in range(dat25_g.shape[0]):
+    for j in range(dat25_g.shape[1]):
+        text = axs[1, 0].text(j, i, labs25_g.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[1, 0].set_title('phip=0.5, phir=25, green')
+
+axs[0, 1].imshow(dat75_r)
+for i in range(dat75_r.shape[0]):
+    for j in range(dat75_r.shape[1]):
+        text = axs[0, 1].text(j, i, labs75_r.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[0, 1].set_title('phip=0.5, phir=75, red')
+
+axs[1, 1].imshow(dat75_g)
+for i in range(dat75_g.shape[0]):
+    for j in range(dat75_g.shape[1]):
+        text = axs[1, 1].text(j, i, labs75_g.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[1, 1].set_title('phip=0.5, phir=75, green')
+
+axs[2, 0].set_ylabel('slice')
+axs[2, 0].set_xlabel('PCA component')
+axs[2, 0].imshow(dat40_r)
+for i in range(dat40_r.shape[0]):
+    for j in range(dat40_r.shape[1]):
+        text = axs[2, 0].text(j, i, labs40_r.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[2, 0].set_title('phip=0.5, phir=40, red')
+
+axs[2, 1].set_xlabel('PCA component')
+axs[2, 1].imshow(dat40_g)
+for i in range(dat40_g.shape[0]):
+    for j in range(dat40_g.shape[1]):
+        text = axs[2, 1].text(j, i, labs40_g.loc[i].values[0][0],
+                              ha='center', va='center',
+                              color='w', size=5)
+axs[2, 1].set_title('phip=0.5, phir=40, green')
+
+fig.suptitle('Standard scaled theta-averaged data')
+pl.show()
