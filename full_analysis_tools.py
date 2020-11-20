@@ -447,7 +447,10 @@ def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
         Displays a scatter plot of each coordinate in dat_tsne, with colour
 
     '''
-    col_unique = col_dat.unique().values
+    if isinstance(col_dat, pd.core.indexes.base.Index):
+        col_unique = col_dat.unique().values
+    else:
+        col_unique = col_dat.unique()
     n_colours = len(col_unique)
     if n_colours > 10:
         cmap = pl.get_cmap('tab20')
@@ -473,8 +476,81 @@ def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
               by_label.keys(),
               loc='center left',
               bbox_to_anchor=(1.0, 0.5))
+    pl.tight_layout()
     pl.show()
 
+def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
+    '''
+    Plots col_dat_1 and _2 on coordinates specified in dat_tsne.
+    Plots col_dat_1 as solid circles and col_dat_2 as open circles.
+
+    Inputs:
+        dat_tsne: n x 2 DataFrame
+        col_dat: n x 1 series or index, in same order as dat_tsne
+        plot_title: string
+        **pl_kwargs: additional inputs for plotting with pl.scatter. Suggest setting alpha=0.7.
+
+    Outputs:
+        Displays a scatter plot of each coordinate in dat_tsne, with colour
+
+    '''
+    # colours for variable 1
+    if isinstance(col_dat_1, pd.core.indexes.base.Index):
+        col_unique_1 = col_dat_1.unique().values
+    else:
+        col_unique_1 = col_dat_1.unique()
+    n_colours_1 = len(col_unique_1)
+    if n_colours_1 > 10:
+        cmap_1 = pl.get_cmap('tab20')
+        plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
+    elif n_colours_1 > 5:
+        cmap_1 = pl.get_cmap('tab10')
+        plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
+    else:
+        cmap_1 = pl.get_cmap('tab10')
+        plot_colours_1 = cmap_1(np.linspace(start=0, stop=0.5, num=n_colours_1))
+
+    clr_1 = {col_unique_1[i]: plot_colours_1[i] for i in range(n_colours_1)}
+
+    # colours for variable 2
+    if isinstance(col_dat_2, pd.core.indexes.base.Index):
+        col_unique_2 = col_dat_2.unique().values
+    else:
+        col_unique_2 = col_dat_2.unique()
+    n_colours_2 = len(col_unique_2)
+    if n_colours_2 > 10:
+        cmap_2 = pl.get_cmap('tab20')
+        plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
+    elif n_colours_2 > 5:
+        cmap_2 = pl.get_cmap('tab10')
+        plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
+    else:
+        cmap_2 = pl.get_cmap('tab10')
+        plot_colours_2 = cmap_2(np.linspace(start=0, stop=0.5, num=n_colours_2))
+
+    clr_2 = {col_unique_2[i]: plot_colours_2[i] for i in range(n_colours_2)}
+
+    for point in range(dat_tsne.shape[0]):
+        pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
+                   color=clr_1[col_dat_1[point]],
+                   label=col_dat_1[point],
+                   **pl_kwargs)
+        pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
+                   color='none',
+                   edgecolor=clr_2[col_dat_2[point]],
+                   linewidths=2,
+                   label=col_dat_2[point],
+                   s=60,
+                   **pl_kwargs)
+    handles, labels = pl.gca().get_legend_handles_labels()
+    by_label = dict(zip(labels, handles))
+    pl.title(plot_title)
+    pl.legend(by_label.values(),
+              by_label.keys(),
+              loc='center left',
+              bbox_to_anchor=(1.0, 0.5))
+    pl.tight_layout()
+    pl.show()
 
 def phi_plot(cluster_dat, plot_col_name, plot_title, save_file=None):
     cluster_dat

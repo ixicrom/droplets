@@ -1,7 +1,10 @@
-from full_analysis_tools import read_files, format_rectangles, read_calc_format_wedges, hier, clust, gini_score_range, optimalK, tSNE_transform, gini_score, phi_plot, PCA_transform
+from full_analysis_tools import read_files, format_rectangles, read_calc_format_wedges, hier, clust, gini_score_range, optimalK, tSNE_transform, gini_score, phi_plot, PCA_transform, tSNE_transform, tSNE_plot_2col
 import matplotlib.pyplot as pl
 import os
 import numpy as np
+import time
+import pandas as pd
+from sklearn.preprocessing import StandardScaler
 
 graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/'
 
@@ -13,29 +16,39 @@ dat = read_files(filePath)
 file_suffix = ''
 if input('Use theta-averaged data? y/n: ') == 'y':
     r_dat = format_rectangles(dat, scale='standard', theta_av=True)
+    print(r_dat.head())
 else:
     r_dat = format_rectangles(dat, scale='standard', theta_av=False)
     file_suffix += '_rect'
+    print(r_dat.head())
 # %% calculate wedge data
 wedge_path = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/'
 
 data_tag = input('Which data to include? all/nice/oneA/oneB: ')
 if data_tag == 'all':
     info_file = os.path.join(wedge_path, 'stack_info.csv')
-    save_file = os.path.join(wedge_path, 'wedges_all')
+    save_file = os.path.join(wedge_path, 'wedges_all')+'.pkl'
     file_suffix += '_all'
 elif data_tag == 'nice':
     info_file = os.path.join(wedge_path, 'stack_info_2020-08-20.csv')
-    save_file = os.path.join(wedge_path, 'wedges_nice')
-    file_suffix += 'nice'
+    save_file = os.path.join(wedge_path, 'wedges_nice')+'.pkl'
+    file_suffix += '_nice'
 elif data_tag == 'oneA':
     info_file = os.path.join(wedge_path, 'stack_info_2020-08-28_A.csv')
-    save_file = os.path.join(wedge_path, 'wedges_A')
-    file_suffix += 'oneA'
+    save_file = os.path.join(wedge_path, 'wedges_A')+'.pkl'
+    file_suffix += '_oneA'
 elif data_tag == 'oneB':
-    info_file_one_B = os.path.join(wedge_path, 'stack_info_2020-08-28_B.csv')
-    save_file_B = os.path.join(wedge_path, 'wedges_B')
-    file_suffix += 'oneB'
+    info_file = os.path.join(wedge_path, 'stack_info_2020-08-28_B.csv')
+    save_file = os.path.join(wedge_path, 'wedges_B')+'.pkl'
+    file_suffix += '_oneB'
+elif data_tag == 'noDist':
+    info_file = os.path.join(wedge_path, 'stack_info_no_distorted.csv')
+    save_file = os.path.join(wedge_path, 'wedges_noDist')+'.pkl'
+    file_suffix += '_noDist'
+elif data_tag == 'noIsh':
+    info_file = os.path.join(wedge_path, 'stack_info_no_roundish.csv')
+    save_file = os.path.join(wedge_path, 'wedges_noIsh')+'.pkl'
+    file_suffix += '_noIsh'
 else:
     print('Invalid selection, problems will happen')
 if input('Calculate wedges from scratch? y/n: ') == 'y':
@@ -51,14 +64,29 @@ else:
                                      fileName=save_file,
                                      reslice=False,
                                      hp=False)
-r_dat = r_dat[r_dat.index.isin(wedges.index)]
+if input('Include wedge data? y/n: ') == 'y':
+    if input('Include only wedge data? y/n: ') == 'y':
+        r_dat = wedges.dropna()
+        r_arr = StandardScaler().fit_transform(r_dat)
+        r_dat = pd.DataFrame(r_arr, index=r_dat.index, columns=r_dat.columns)
+        file_suffix += '_wedge'
+    else:
+        r_dat = pd.concat([r_dat, wedges], sort=False, axis=1)
+        r_arr = StandardScaler().fit_transform(r_dat)
+        r_dat = pd.DataFrame(r_arr, index=r_dat.index, columns=r_dat.columns)
+        r_dat = r_dat.dropna()
+        file_suffix += '_combi'
+else:
+    r_dat = r_dat[r_dat.index.isin(wedges.index)]
 
 # %% k-means/hier theta-averaged: gini score
 if input('Use PCA? y/n: ') == 'y':
+    var = float(input('PCA variance: '))
     file_suffix += '_pca'
-    r_dat = PCA_transform(r_dat, 0.97)[1]
+    r_dat = PCA_transform(r_dat, var)[1]
 
 if input('Make gini score graph? y/n: ') == 'y':
+    start_t = time.time()
     scores_k = gini_score_range(method='k',
                                 dat=r_dat,
                                 start_num=3,
@@ -67,6 +95,8 @@ if input('Make gini score graph? y/n: ') == 'y':
                                 dat=r_dat,
                                 start_num=3,
                                 stop_num=33)
+    stop_t = time.time()
+    print('Gini plot time taken: '+str(stop_t-start_t))
     x = [*range(3, 33)]
     pl.plot(x, scores_k, label='K-means clustering')
     pl.plot(x, scores_h, label='Hierarchical clustering')
@@ -85,7 +115,7 @@ if input('Make gap statistic graph? y/n: ') == 'y':
     pl.xlabel('Number of clusters')
     pl.ylabel('Gap statistic')
     pl.title('Gap statistic vs cluster number '+file_suffix[1:])
-    pl.savefig(graph_folder+'gap_'+file_suffix+'.png')
+    pl.savefig(graph_folder+'gap'+file_suffix+'.png')
     pl.show()
 
 # %% t-SNE, try different perplexity values and two random seeds
@@ -119,13 +149,14 @@ pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
 pl.title('K-means clusters '+file_suffix[1:])
 pl.tight_layout()
-pl.savefig(graph_folder+'kmeans_bar_'+file_suffix+'.png')
+pl.savefig(graph_folder+'kmeans_bar'+file_suffix+'.png')
 pl.show()
 
 k_gini = gini_score(k_count)
 print('kmeans_gini'+file_suffix+': '+str(np.mean(k_gini)))
 
-h_labs, h_count = hier(r_dat, 5, show_dendro=False)
+dendro = input('Show dendrogram? y/n: ') == 'y'
+h_labs, h_count = hier(r_dat, 5, show_dendro=dendro)
 h_gini = gini_score(h_count)
 print('hier_gini'+file_suffix+': '+str(np.mean(h_gini)))
 
@@ -135,7 +166,7 @@ pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
 pl.title('Hierarchical clusters '+file_suffix[1:])
 pl.tight_layout()
-pl.savefig(graph_folder+'hier_bar_'+file_suffix+'.png')
+pl.savefig(graph_folder+'hier_bar'+file_suffix+'.png')
 pl.show()
 
 # %% hier and k-means phi plots
@@ -152,7 +183,88 @@ phi_plot(k_labs,
          'Compositional plot of k-means clustering '+file_suffix[1:],
          save_file=graph_folder+'kmeans_phi'+file_suffix+'.png')
 
-# %% removed bad images ________________________________
+
+# %% t-SNE plots
+if input('Plot clusters on t-SNE axes? y/n: ') == 'y':
+    # k_labs['']
+    dat_tsne = tSNE_transform(r_dat, 10)
+    sample_names = r_dat.index.get_level_values(0)
+    # sample_names
+    # sample_names.unique()
+    type(sample_names)
+    clusters = pd.Series(k_labs[''])
+    # clusters.unique()
+    tSNE_plot_2col(dat_tsne, sample_names, clusters, 'tSNE test', alpha=0.7)
 
 
-# %% one image per composition______________________________________
+# def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
+#     '''
+#     Plots col_dat on coordinates specified in dat_tsne.
+#
+#     Inputs:
+#         dat_tsne: n x 2 DataFrame
+#         col_dat: n x 1 series or index, in same order as dat_tsne
+#         plot_title: string
+#         **pl_kwargs: additional inputs for plotting with pl.scatter. Suggest setting alpha=0.7.
+#
+#     Outputs:
+#         Displays a scatter plot of each coordinate in dat_tsne, with colour
+#
+#     '''
+#     # colours for variable 1
+#     if isinstance(col_dat_1, pd.core.indexes.base.Index):
+#         col_unique_1 = col_dat_1.unique().values
+#     else:
+#         col_unique_1 = col_dat_1.unique()
+#     n_colours_1 = len(col_unique_1)
+#     if n_colours_1 > 10:
+#         cmap_1 = pl.get_cmap('tab20')
+#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
+#     elif n_colours_1 > 5:
+#         cmap_1 = pl.get_cmap('tab10')
+#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
+#     else:
+#         cmap_1 = pl.get_cmap('tab10')
+#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=0.5, num=n_colours_1))
+#
+#     clr_1 = {col_unique_1[i]: plot_colours_1[i] for i in range(n_colours_1)}
+#
+#     # colours for variable 2
+#     if isinstance(col_dat_2, pd.core.indexes.base.Index):
+#         col_unique_2 = col_dat_2.unique().values
+#     else:
+#         col_unique_2 = col_dat_2.unique()
+#     n_colours_2 = len(col_unique_2)
+#     if n_colours_2 > 10:
+#         cmap_2 = pl.get_cmap('tab20')
+#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
+#     elif n_colours_2 > 5:
+#         cmap_2 = pl.get_cmap('tab10')
+#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
+#     else:
+#         cmap_2 = pl.get_cmap('tab10')
+#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=0.5, num=n_colours_2))
+#
+#     clr_2 = {col_unique_2[i]: plot_colours_2[i] for i in range(n_colours_2)}
+#
+#     for point in range(dat_tsne.shape[0]):
+#         pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
+#                    color=clr_1[col_dat_1[point]],
+#                    label=col_dat_1[point],
+#                    **pl_kwargs)
+#         pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
+#                    color='none',
+#                    edgecolor=clr_2[col_dat_2[point]],
+#                    linewidths=2,
+#                    label=col_dat_2[point],
+#                    s=60,
+#                    **pl_kwargs)
+#     handles, labels = pl.gca().get_legend_handles_labels()
+#     by_label = dict(zip(labels, handles))
+#     pl.title(plot_title)
+#     pl.legend(by_label.values(),
+#               by_label.keys(),
+#               loc='center left',
+#               bbox_to_anchor=(1.0, 0.5))
+#     pl.tight_layout()
+#     pl.show()
