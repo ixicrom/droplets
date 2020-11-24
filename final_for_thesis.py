@@ -194,7 +194,12 @@ if input('Plot clusters on t-SNE axes? y/n: ') == 'y':
     type(sample_names)
     clusters = pd.Series(k_labs[''])
     # clusters.unique()
-    tSNE_plot_2col(dat_tsne, sample_names, clusters, 'tSNE test', alpha=0.7)
+    tSNE_plot_2col(dat_tsne,
+                   col_dat_1=sample_names,
+                   col_dat_2=clusters,
+                   plot_title='tSNE clusters ' + file_suffix[1:],
+                   save_file=graph_folder+'tSNE_clusters'+file_suffix+'.png',
+                   alpha=0.7)
 
 
 # def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
@@ -283,8 +288,10 @@ dat75_r = r_dat.loc[idx['phip0-5_phir75', 'red'], :]
 dat40_g = r_dat.loc[idx['phip0-5_phir40', 'green'], :]
 dat40_r = r_dat.loc[idx['phip0-5_phir40', 'red'], :]
 
+
 # now get the cluster labels
 labs25_r = h_labs.loc[idx['phip0-5_phir25', 'red'], :]
+
 labs25_g = h_labs.loc[idx['phip0-5_phir25', 'green'], :]
 
 labs75_r = h_labs.loc[idx['phip0-5_phir75', 'red'], :]
@@ -295,59 +302,72 @@ labs40_g = h_labs.loc[idx['phip0-5_phir40', 'green'], :]
 
 
 # now see if the plot works!
-fig, axs = pl.subplots(3, 2, sharex=True, sharey=True)
+fig, axs = pl.subplots(3, 2, sharex=True, sharey=True, figsize=(12, 10))
+axs[0, 0].set_aspect('equal')
 axs[0, 0].set_ylabel('slice')
-axs[0, 0].imshow(dat25_r)
+axs[0, 0].imshow(dat25_r, aspect=5)
 for i in range(dat25_r.shape[0]):
+
     for j in range(dat25_r.shape[1]):
-        text = axs[0, 0].text(j, i, labs25_r.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[0, 0].text(j, i, labs25_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[0, 0].set_title('phip=0.5, phir=25, red')
 
 axs[1, 0].set_ylabel('slice')
-axs[1, 0].imshow(dat25_g)
+axs[1, 0].imshow(dat25_g, aspect=5)
 for i in range(dat25_g.shape[0]):
     for j in range(dat25_g.shape[1]):
-        text = axs[1, 0].text(j, i, labs25_g.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[1, 0].text(j, i, labs25_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[1, 0].set_title('phip=0.5, phir=25, green')
 
-axs[0, 1].imshow(dat75_r)
+axs[0, 1].imshow(dat75_r, aspect=5)
 for i in range(dat75_r.shape[0]):
     for j in range(dat75_r.shape[1]):
-        text = axs[0, 1].text(j, i, labs75_r.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[0, 1].text(j, i, labs75_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[0, 1].set_title('phip=0.5, phir=75, red')
 
-axs[1, 1].imshow(dat75_g)
+axs[1, 1].imshow(dat75_g, aspect=5)
 for i in range(dat75_g.shape[0]):
     for j in range(dat75_g.shape[1]):
-        text = axs[1, 1].text(j, i, labs75_g.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[1, 1].text(j, i, labs75_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[1, 1].set_title('phip=0.5, phir=75, green')
 
 axs[2, 0].set_ylabel('slice')
 axs[2, 0].set_xlabel('PCA component')
-axs[2, 0].imshow(dat40_r)
+axs[2, 0].imshow(dat40_r, aspect=5)
 for i in range(dat40_r.shape[0]):
     for j in range(dat40_r.shape[1]):
-        text = axs[2, 0].text(j, i, labs40_r.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[2, 0].text(j, i, labs40_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[2, 0].set_title('phip=0.5, phir=40, red')
 
 axs[2, 1].set_xlabel('PCA component')
-axs[2, 1].imshow(dat40_g)
+axs[2, 1].imshow(dat40_g, aspect=5)
 for i in range(dat40_g.shape[0]):
     for j in range(dat40_g.shape[1]):
-        text = axs[2, 1].text(j, i, labs40_g.loc[i].values[0][0],
-                              ha='center', va='center',
-                              color='w', size=5)
+        if j % 10 == 0:
+            text = axs[2, 1].text(j, i,
+                                  labs40_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
 axs[2, 1].set_title('phip=0.5, phir=40, green')
 
-fig.suptitle('Standard scaled theta-averaged data')
+fig.suptitle('Examples of input data  '+file_suffix[1:])
+fig.subplots_adjust(hspace=0)
+fig.subplots_adjust(wspace=0)
+pl.tight_layout()
+pl.savefig(graph_folder+'data_eg'+file_suffix+'.png')
 pl.show()

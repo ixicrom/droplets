@@ -479,7 +479,7 @@ def tSNE_plot(dat_tsne, col_dat, plot_title, **pl_kwargs):
     pl.tight_layout()
     pl.show()
 
-def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
+def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, save_file, **pl_kwargs):
     '''
     Plots col_dat_1 and _2 on coordinates specified in dat_tsne.
     Plots col_dat_1 as solid circles and col_dat_2 as open circles.
@@ -491,7 +491,7 @@ def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
         **pl_kwargs: additional inputs for plotting with pl.scatter. Suggest setting alpha=0.7.
 
     Outputs:
-        Displays a scatter plot of each coordinate in dat_tsne, with colour
+        Displays a scatter plot of each coordinate in dat_tsne, with colours
 
     '''
     # colours for variable 1
@@ -550,6 +550,7 @@ def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
               loc='center left',
               bbox_to_anchor=(1.0, 0.5))
     pl.tight_layout()
+    pl.savefig(save_file)
     pl.show()
 
 def phi_plot(cluster_dat, plot_col_name, plot_title, save_file=None):

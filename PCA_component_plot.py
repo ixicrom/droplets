@@ -22,7 +22,7 @@ pca_dat97.head()
 pca_difference = pca_dat99.loc[:,186:]
 pca_difference
 
-pca_extra_comps = pd.DataFrame(pca99.components_)[186:]
+pca_extra_comps = pd.DataFrame(pca99.components_)[:10]
 
 r = pd.Series(np.sort([*range(273)]*100), name='r')
 theta = pd.Series([*range(100)]*273, name='theta')
