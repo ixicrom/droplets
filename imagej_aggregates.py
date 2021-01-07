@@ -178,3 +178,65 @@ g = sb.violinplot(data=plot_dat,
 pl.legend(loc='lower left')
 pl.savefig('/Users/s1101153/Desktop/agg_frac_red-green.png')
 pl.show()
+
+
+# %% swarmplots for majority/minority split
+
+sb.swarmplot(data=maj_dat,
+             x='Droplet shape',
+             y='Aggregate area fraction',
+             size=10)
+pl.title('Majority channel aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_maj.png')
+pl.show()
+
+sb.swarmplot(data=min_dat,
+             x='Droplet shape',
+             y='Aggregate area fraction',
+             size=10)
+pl.title('Minority channel aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_min.png')
+pl.show()
+
+
+# %% swarmplots for red/green split
+plot_dat.head()
+
+red_dat = plot_dat[plot_dat['Particle']=='red']
+green_dat = plot_dat[plot_dat['Particle']=='green']
+
+sb.swarmplot(data=red_dat,
+             x='Droplet shape',
+             y='Aggregate area fraction',
+             size=10)
+pl.title('Red channel aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_red.png')
+pl.show()
+
+sb.swarmplot(data=green_dat,
+             x='Droplet shape',
+             y='Aggregate area fraction',
+             size=10)
+pl.title('Green channel aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_green.png')
+pl.show()
+
+
+# %% swarmplots all together
+sb.swarmplot(data=plot_dat,
+             x='Channel',
+             y='Aggregate area fraction',
+             hue='Droplet shape',
+             size=10)
+pl.title('Majority and minority channels aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_min-maj.png')
+pl.show()
+
+sb.swarmplot(data=plot_dat,
+             x='Particle',
+             y='Aggregate area fraction',
+             hue='Droplet shape',
+             size=10)
+pl.title('Red and green channels aggregate area fraction')
+pl.savefig('/Users/s1101153/Desktop/agg_frac_red-green.png')
+pl.show()

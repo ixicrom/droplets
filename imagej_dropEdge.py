@@ -185,105 +185,113 @@ pl.title('Droplet area per perimeter (by particle type)')
 pl.show()
 
 # %% area/perimeter plot all data
-g = sb.violinplot(data=plot_dat,
-                  x='Droplet shape',
-                  y='Droplet area per perimeter',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=plot_dat,
+#                   x='Droplet shape',
+#                   y='Droplet area per perimeter',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=plot_dat,
              x='Droplet shape',
-             y='Droplet area per perimeter')
+             y='Droplet area per perimeter',
+             size=10)
 pl.title('All channels droplet area per perimeter')
 pl.savefig('/Users/s1101153/Desktop/area_per_perim_all.png')
 pl.show()
 
 # %% circularity plot all data
-g = sb.violinplot(data=plot_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=plot_dat,
+#                   x='Droplet shape',
+#                   y='Droplet circularity',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=plot_dat,
              x='Droplet shape',
-             y='Droplet circularity')
+             y='Droplet circularity',
+             size=10)
 pl.title('All channels droplet circularity')
 pl.savefig('/Users/s1101153/Desktop/circ_all.png')
 pl.show()
 
 # %% area/perimeter plot majority channel
-g = sb.violinplot(data=maj_dat,
-                  x='Droplet shape',
-                  y='Droplet area per perimeter',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=maj_dat,
+#                   x='Droplet shape',
+#                   y='Droplet area per perimeter',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=maj_dat,
              x='Droplet shape',
-             y='Droplet area per perimeter')
+             y='Droplet area per perimeter',
+             size=10)
 pl.title('Majority channel droplet area per perimeter')
 pl.savefig('/Users/s1101153/Desktop/area_per_perim_maj.png')
 pl.show()
 
 # %% circularity plot majority channel
-g = sb.violinplot(data=maj_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=maj_dat,
+#                   x='Droplet shape',
+#                   y='Droplet circularity',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=maj_dat,
              x='Droplet shape',
-             y='Droplet circularity')
+             y='Droplet circularity',
+             size=10)
 pl.title('Majority channel droplet circularity')
 pl.savefig('/Users/s1101153/Desktop/circ_maj.png')
 pl.show()
 
 # %% circularity/roundness plot all data
-g = sb.violinplot(data=plot_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity/roundness',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=plot_dat,
+#                   x='Droplet shape',
+#                   y='Droplet circularity/roundness',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=plot_dat,
              x='Droplet shape',
-             y='Droplet circularity/roundness')
+             y='Droplet circularity/roundness',
+             size=10)
 pl.title('All channels droplet circularity per roundness')
 pl.savefig('/Users/s1101153/Desktop/circ_per_round_all.png')
 pl.show()
 
 # %% circularity/roundness plot majority channel
-g = sb.violinplot(data=maj_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity/roundness',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=maj_dat,
+#                   x='Droplet shape',
+#                   y='Droplet circularity/roundness',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=maj_dat,
              x='Droplet shape',
-             y='Droplet circularity/roundness')
+             y='Droplet circularity/roundness',
+             size=10)
 pl.title('Majority channel droplet circularity per roundness')
 pl.savefig('/Users/s1101153/Desktop/circ_per_round_maj.png')
 pl.show()
 
 # %% circularity/roundness plot minority channel
-g = sb.violinplot(data=min_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity/roundness',
-                  inner='quartile',
-                  palette='pastel')
+# g = sb.violinplot(data=min_dat,
+#                   x='Droplet shape',
+#                   y='Droplet circularity/roundness',
+#                   inner='quartile',
+#                   palette='pastel')
 sb.swarmplot(data=min_dat,
              x='Droplet shape',
-             y='Droplet circularity/roundness')
+             y='Droplet circularity/roundness',
+             size=10)
 pl.title('Minority channel droplet circularity per roundness')
 pl.savefig('/Users/s1101153/Desktop/circ_per_round_min.png')
 pl.show()
 
 
-# %%
+# %% circularity/roundness boxplot majority channel
 g = sb.boxplot(data=maj_dat,
-                  x='Droplet shape',
-                  y='Droplet circularity/roundness',
-                  palette='pastel')
+               x='Droplet shape',
+               y='Droplet circularity/roundness',
+               palette='pastel')
 sb.swarmplot(data=maj_dat,
              x='Droplet shape',
-             y='Droplet circularity/roundness')
+             y='Droplet circularity/roundness',
+             size=10)
 pl.title('Majority channel droplet circularity per roundness')
 pl.savefig('/Users/s1101153/Desktop/circ_per_round_box.png')
 pl.show()

@@ -18,17 +18,18 @@ import matplotlib.pyplot as pl
 # variables for testing________________________________________________________
 # folderName = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
 # oldFileType = False
+# dropNans = True
+# #
+# # n_clust=5
+# # show_dendro=False
+# #
+# # col_name='k-cluster'
+# #
+# # cluster_dat=h
+# # plot_col_name='Cluster_hier'
+# # plot_title='Hierarchical cluster plot'
 #
-# n_clust=5
-# show_dendro=False
-#
-# col_name='k-cluster'
-#
-# cluster_dat=h
-# plot_col_name='Cluster_hier'
-# plot_title='Hierarchical cluster plot'
-
-# imFile = '/Users/s1101153/Desktop/droplet_stacks/63x/final_images/ims_to_read/SUM_phip0-5_phir10_2_stack.tif'
+# imFile = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/SUM_phip0-5_phir10_2_stack.tif'
 # um=99.84
 # L=1025
 # C_x_um=52.249
@@ -68,6 +69,7 @@ def read_files(folderName, dropNans=True, oldFileType=False):
             # name[4:-4]
             keys.append(name[:-4])
         # ________________________________
+
     # print([x for x in keys if keys.count(x) >= 2])
     dat_df = pd.concat(dat, axis=1, keys=keys, names=['slices'])  # axis=1 for side-by-side. will do multi-layer column names
     if dropNans:
@@ -149,8 +151,83 @@ def rectangle_slice(imFile,
         print('File saved:' + str(saveFile))
     return slice_df
 
+def rectangle_slice_um(imFile,
+                       um,
+                       L,
+                       C_x_um,
+                       C_y_um,
+                       n_slices,
+                       n_theta,
+                       r_min_um=None,
+                       r_max_um=None,
+                       savePath=None):
+    imArr = io.imread(imFile)
+    imArr.shape
+    imGreen = imArr[:, :, 0]
+    imRed = imArr[:, :, 1]
 
-def slice_info_file(infoFile,
+    pixel_um = L/um  # conversion from microns to pixels
+
+    # convert centre coordinates to pixels
+    C_x = C_x_um*pixel_um
+    C_y = C_y_um*pixel_um
+
+    if r_min_um is None or r_min < 0:
+        r_min_um = 0
+    if r_max_um is None or r_max_um > um-max(C_x_um, C_y_um):
+        r_max = um-max(C_x_um, C_y_um)
+    slices = []  # list to add results to
+    keys = []
+    for slice in range(n_slices):
+        # create empty arrays for each output value for this slice
+        r_dat = []
+        theta_dat = []
+        val_dat_g = []
+        val_dat_r = []
+        sample_name = []
+        slice_num = []
+        # if r_max is None or r_max > int(L-max(C_x, C_y)):
+            # r_max = int(L-max(C_x, C_y))
+
+        samp = path.split(imFile)[1][:-10]
+        keys.append(samp+'_slice'+str(slice))
+        for r_um in np.arange(start=r_min, stop=r_max, step=0.1):
+            r = r_um*pixel_um
+            for i in range(n_theta):  # loop through theta values
+                theta = 2*math.pi/n_slices * i/n_theta  # theta for output, values from 0 to 2pi/n_slices
+                theta_calc = theta + slice*2*math.pi/n_slices  # theta for calculating points, values from 0 to 2pi
+                x_cent = r*math.cos(theta_calc)  # point to plot, x relative to centre of image
+                y_cent = r*math.sin(theta_calc)  # point to plot, y relative to centre of image
+                # convert points to plot so they're relative to the corner of the image
+                x = x_cent+C_x
+                y = y_cent+C_y
+                # append values to arrays
+                theta_dat.append(theta)
+                r_dat.append(r_um)
+                val_dat_g.append(imGreen[int(round(x)), int(round(y))])
+                val_dat_r.append(imRed[int(round(x)), int(round(y))])
+                sample_name.append(samp)
+                slice_num.append(slice)
+
+        # collect different values into a dataframe, and append it to the slices array
+        points = pd.DataFrame([r_dat, theta_dat, val_dat_g, val_dat_r]).transpose()
+        points.columns = ['r_um', 'theta', 'val_green', 'val_red']
+        points.columns.names = ['vars']
+        slices.append(points)
+        # if saveFile:
+        #     saveName=imFile+"_slice"+str(slice)+".pkl"
+        #     points.to_pickle(saveName)
+    slice_df_um = pd.concat(slices, axis=1, keys=keys, names=['slices'])
+    if savePath is not None:
+        saveName = path.split(imFile)[1][:-4]+'_rectangle_slices.pkl'
+        saveFile = path.join(savePath, saveName)
+        slice_df.to_pickle(saveFile)
+        print('File saved:' + str(saveFile))
+    return slice_df
+
+
+
+def slice_info_file_um(infoFile,
                     imPath,
                     n_slice,
                     n_theta,
@@ -182,6 +259,39 @@ def slice_info_file(infoFile,
 
     return pd.concat(all_slices, axis=1).dropna()
 
+def slice_info_file(infoFile,
+                    imPath,
+                    n_slice,
+                    n_theta,
+                    r_min_um=None,
+                    savePath=None):
+    f = open(infoFile, 'r')
+    all_slices = []
+    for line in f.readlines():
+        if line.startswith("SUM"):
+            vals = line.split(",")
+            imFile = path.join(imPath, vals[0])
+            umSize = float(vals[1])
+            pxSize = int(vals[2])
+            Cx = float(vals[4])
+            Cy = float(vals[3])
+            r_max_um = float(vals[7])
+            n_slice = 12
+            im_slices = rectangle_slice_um(imFile=imFile,
+                                           um=umSize,
+                                           L=pxSize,
+                                           C_x_um=Cx,
+                                           C_y_um=Cy,
+                                           n_slices=n_slice,
+                                           n_theta=n_theta,
+                                           r_min_um=r_min_um,
+                                           r_max_um=r_max_um,
+                                           savePath=savePath)
+            all_slices.append(im_slices)
+
+    return pd.concat(all_slices, axis=1).dropna()
+
+
 
 def read_rectangle_folder(folderName):
     slices = []
@@ -195,7 +305,7 @@ def read_rectangle_folder(folderName):
 
 
 # functions for getting data in desired format___________________________
-def format_rectangles(dat, scale, theta_av=True):
+def format_rectangles(dat, scale, theta_av=True,r_av=False):
     '''
     Reformats dataframe (as output from rectangle_slice or slice_tools.read_file) ready for clustering.
     Initial format:
@@ -238,11 +348,26 @@ def format_rectangles(dat, scale, theta_av=True):
                 0 to 27299 (each r x theta combo)
 
     '''
-
     idx = pd.IndexSlice
 
     if theta_av:
         dat = theta_average(dat).transpose()
+    elif r_av:
+        idx = pd.IndexSlice
+        thetaCol = dat.columns[2]
+        data_means = dat.groupby([thetaCol]).mean() #group by theta for one of the slices, doesn't matter which one as they are all the same
+
+        # take the green pixel values
+        data_mean_green = data_means.loc[:, idx[:, 'val_green']]
+        data_mean_green.index.name = 'theta'
+
+        # take the red pixel values
+        data_mean_red = data_means.loc[:, idx[:, 'val_red']]
+        data_mean_red.index.name = 'theta'
+
+        # combine into a final dataframe
+        data_mean_all = pd.concat([data_mean_green, data_mean_red], axis=1)
+        dat = data_mean_all.transpose()
     else:
         colms = ['val_green', 'val_red']
         vals = dat.loc[:, idx[:, colms]].transpose()
@@ -261,8 +386,9 @@ def format_rectangles(dat, scale, theta_av=True):
 
     dat = dat.reset_index()
 
-    samples = dat['slices'].str.slice(4, 21).str.rstrip('_stack').str.rstrip('_slice')
+    samples = dat['slices'].str.slice(4, 21).str.rstrip('_stack').str.rstrip('_slice').str.replace('_', '\_')
     dat.insert(0, 'sample', samples)
+    dat.head()
 
     slice_nums = dat['slices'].str.rstrip('.pkl').str[-2:].str.lstrip('e').astype(int)
     dat['slices'] = slice_nums
@@ -274,8 +400,8 @@ def format_rectangles(dat, scale, theta_av=True):
 
     dat = dat.drop('vars', axis=1)
 
-    phip = samples.str[0:7].str.strip('_phi')
-    phir = samples.str[10:15].str.lstrip('phir').str.rstrip('_2')
+    phip = samples.str[0:7].str.strip('\_phi')
+    phir = samples.str[10:15].str.lstrip('phir').str.rstrip('\_2')
 
     dat.insert(0, 'phir', phir.astype(int))
     dat.insert(0, 'phip', phip.str.replace('-', '.').astype(float))
@@ -340,9 +466,10 @@ def read_calc_format_wedges(scale,
 
     slices_data = slices_data.reset_index()
     samples = slices_data['sample']  # .str.slice(4,21).str.rstrip('_stack')
-    phip = samples.str[0:7].str.strip('_phi')
-    phir = samples.str[10:15].str.lstrip('phir').str.rstrip('_2')
-
+    print(samples)
+    phip = samples.str[0:7].str.strip('\_phi')
+    phir = samples.str[10:15].str.lstrip('phir').str.rstrip('\_2')
+    print(phir)
     slices_data.insert(0, 'phir', phir.astype(int))
     slices_data.insert(0, 'phip', phip.str.replace('-', '.').astype(float))
 
@@ -390,8 +517,8 @@ def tSNE_transform(dat, p, r_state=0):
 
 
 # functions for clustering that all return the output of count_clusters_________
-def hier(dat, n_clust, show_dendro=False):
-    np.random.seed(1234)
+def hier(dat, n_clust, show_dendro=False, seed=1234):
+    np.random.seed(seed)
     h = h_cluster(dat, n_clust, showPlot=show_dendro)
     h.index = dat.index
     h_count = count_clusters(h.reset_index(),
@@ -401,8 +528,8 @@ def hier(dat, n_clust, show_dendro=False):
     return h, h_count
 
 
-def kmeans(dat, n_clust, col_name):
-    np.random.seed(1234)
+def kmeans(dat, n_clust, col_name, seed=1234):
+    np.random.seed(seed)
     km = cluster.KMeans(n_clusters=n_clust)
     km_fit = km.fit(dat)
     labs = pd.DataFrame(km_fit.labels_, index=dat.index, columns=[col_name])
@@ -413,22 +540,22 @@ def kmeans(dat, n_clust, col_name):
     return labs, k_count
 
 
-def clust(method, dat, n_clust, col_name=""):
+def clust(method, dat, n_clust, col_name="", seed=1234):
     if method == 'h':
-        count = hier(dat, n_clust, False)
+        count = hier(dat, n_clust, False, seed)
 
     elif method == 'k':
-        count = kmeans(dat, n_clust, col_name)
+        count = kmeans(dat, n_clust, col_name, seed)
     else:
         print('Invalid method input. Use \'h\' for hierarchical clustering or \'k\' for k-means clustering.')
     return count
 
 
 # functions for visualisation
-def gini_score_range(method, dat, start_num, stop_num):
+def gini_score_range(method, dat, start_num, stop_num, seed=1234):
     score = list()
     for i in range(start_num, stop_num):
-        count = clust(method, dat, i, col_name='cluster')[1]
+        count = clust(method, dat, i, col_name='cluster', seed=seed)[1]
         score.append(np.mean(gini_score(count)))
     return score
 

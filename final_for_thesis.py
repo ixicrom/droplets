@@ -5,6 +5,10 @@ import numpy as np
 import time
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
+# import matplotlib
+# matplotlib.style.core.reload_library()
+# pl.style.use('thesis')
+
 
 graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/'
 
@@ -35,7 +39,7 @@ elif data_tag == 'nice':
     file_suffix += '_nice'
 elif data_tag == 'oneA':
     info_file = os.path.join(wedge_path, 'stack_info_2020-08-28_A.csv')
-    save_file = os.path.join(wedge_path, 'wedges_A')+'.pkl'
+    save_file = os.path.join(wedge_path, 'wedges_A.pkl')
     file_suffix += '_oneA'
 elif data_tag == 'oneB':
     info_file = os.path.join(wedge_path, 'stack_info_2020-08-28_B.csv')
@@ -64,6 +68,7 @@ else:
                                      fileName=save_file,
                                      reslice=False,
                                      hp=False)
+print(wedges.head())
 if input('Include wedge data? y/n: ') == 'y':
     if input('Include only wedge data? y/n: ') == 'y':
         r_dat = wedges.dropna()
@@ -82,7 +87,7 @@ else:
 # %% k-means/hier theta-averaged: gini score
 if input('Use PCA? y/n: ') == 'y':
     var = float(input('PCA variance: '))
-    file_suffix += '_pca'
+    file_suffix += '_pca'+str(round(var*100))
     r_dat = PCA_transform(r_dat, var)[1]
 
 if input('Make gini score graph? y/n: ') == 'y':
@@ -100,7 +105,7 @@ if input('Make gini score graph? y/n: ') == 'y':
     x = [*range(3, 33)]
     pl.plot(x, scores_k, label='K-means clustering')
     pl.plot(x, scores_h, label='Hierarchical clustering')
-    pl.title('Gini score vs cluster number '+file_suffix[1:])
+    pl.title('Gini score vs cluster number'+file_suffix.replace('_', ', '))
     pl.xlabel('Number of clusters')
     pl.ylabel('Gini score')
     pl.legend(loc='lower right')
@@ -114,7 +119,7 @@ if input('Make gap statistic graph? y/n: ') == 'y':
     pl.plot(gap_count[1]['clusterCount'], gap_count[1]['gap'])
     pl.xlabel('Number of clusters')
     pl.ylabel('Gap statistic')
-    pl.title('Gap statistic vs cluster number '+file_suffix[1:])
+    pl.title('Gap statistic vs cluster number'+file_suffix.replace('_', ', '))
     pl.savefig(graph_folder+'gap'+file_suffix+'.png')
     pl.show()
 
@@ -125,14 +130,14 @@ if input('Make t-SNE graphs? y/n: ') == 'y':
     for p in perp_vals:
         dat_tsne_test = tSNE_transform(r_dat, p)
         pl.scatter(dat_tsne_test[:, 0], dat_tsne_test[:, 1])
-        pl.title('t-SNE '+' data, p='+str(p)+' '+file_suffix[1:])
+        pl.title('t-SNE '+' data, p='+str(p)+file_suffix.replace('_', ', '))
         pl.savefig(graph_folder+'tSNE_'+str(p)+file_suffix+'.png')
         pl.show()
 
     for p in perp_vals:
         dat_tsne_test = tSNE_transform(r_dat, p, r_state=10)
         pl.scatter(dat_tsne_test[:, 0], dat_tsne_test[:, 1])
-        pl.title('t-SNE '+str(data_tag)+' data, random_state=10, p=' +str(p)+' '+file_suffix[1:])
+        pl.title('t-SNE '+str(data_tag)+' data, random_state=10, p=' +str(p)+' '+file_suffix.replace('_', ', '))
         pl.savefig(graph_folder+'tSNE_r10_'+str(p)+file_suffix+'.png')
         pl.show()
 
@@ -143,11 +148,11 @@ k_labs, k_count = clust(method='k',
                         n_clust=5,
                         dat=r_dat)
 
-k_count.transpose().plot(kind='bar', stacked=True)
+k_count.transpose().plot(kind='bar', stacked=True, figsize=(7, 10.5))
 pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
-pl.title('K-means clusters '+file_suffix[1:])
+pl.title('K-means clusters'+file_suffix.replace('_', ', '))
 pl.tight_layout()
 pl.savefig(graph_folder+'kmeans_bar'+file_suffix+'.png')
 pl.show()
@@ -160,11 +165,11 @@ h_labs, h_count = hier(r_dat, 5, show_dendro=dendro)
 h_gini = gini_score(h_count)
 print('hier_gini'+file_suffix+': '+str(np.mean(h_gini)))
 
-h_count.transpose().plot(kind='bar', stacked=True)
+h_count.transpose().plot(kind='bar', stacked=True, figsize=(7, 10.5))#todo: make plot shorter or wider and/or axis labels smaller
 pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
-pl.title('Hierarchical clusters '+file_suffix[1:])
+pl.title('Hierarchical clusters'+file_suffix.replace('_', '\_'))
 pl.tight_layout()
 pl.savefig(graph_folder+'hier_bar'+file_suffix+'.png')
 pl.show()
@@ -174,13 +179,13 @@ pl.show()
 pl.figure(num=None, figsize=(7, 8), dpi=80, facecolor='w', edgecolor='k')
 phi_plot(h_labs,
          'Cluster_hier',
-         'Compositional plot of hierarchical clustering '+file_suffix[1:],
+         'Compositional plot of hierarchical clustering'+file_suffix.replace('_', ', '),
          save_file=graph_folder+'hier_phi'+file_suffix+'.png')
 
 pl.figure(num=None, figsize=(7, 8), dpi=80, facecolor='w', edgecolor='k')
 phi_plot(k_labs,
          '',
-         'Compositional plot of k-means clustering '+file_suffix[1:],
+         'Compositional plot of k-means clustering'+file_suffix.replace('_', ', '),
          save_file=graph_folder+'kmeans_phi'+file_suffix+'.png')
 
 
@@ -197,108 +202,35 @@ if input('Plot clusters on t-SNE axes? y/n: ') == 'y':
     tSNE_plot_2col(dat_tsne,
                    col_dat_1=sample_names,
                    col_dat_2=clusters,
-                   plot_title='tSNE clusters ' + file_suffix[1:],
+                   plot_title='tSNE clusters' + file_suffix.replace('_', ', '),
                    save_file=graph_folder+'tSNE_clusters'+file_suffix+'.png',
                    alpha=0.7)
-
-
-# def tSNE_plot_2col(dat_tsne, col_dat_1, col_dat_2, plot_title, **pl_kwargs):
-#     '''
-#     Plots col_dat on coordinates specified in dat_tsne.
-#
-#     Inputs:
-#         dat_tsne: n x 2 DataFrame
-#         col_dat: n x 1 series or index, in same order as dat_tsne
-#         plot_title: string
-#         **pl_kwargs: additional inputs for plotting with pl.scatter. Suggest setting alpha=0.7.
-#
-#     Outputs:
-#         Displays a scatter plot of each coordinate in dat_tsne, with colour
-#
-#     '''
-#     # colours for variable 1
-#     if isinstance(col_dat_1, pd.core.indexes.base.Index):
-#         col_unique_1 = col_dat_1.unique().values
-#     else:
-#         col_unique_1 = col_dat_1.unique()
-#     n_colours_1 = len(col_unique_1)
-#     if n_colours_1 > 10:
-#         cmap_1 = pl.get_cmap('tab20')
-#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
-#     elif n_colours_1 > 5:
-#         cmap_1 = pl.get_cmap('tab10')
-#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=1, num=n_colours_1))
-#     else:
-#         cmap_1 = pl.get_cmap('tab10')
-#         plot_colours_1 = cmap_1(np.linspace(start=0, stop=0.5, num=n_colours_1))
-#
-#     clr_1 = {col_unique_1[i]: plot_colours_1[i] for i in range(n_colours_1)}
-#
-#     # colours for variable 2
-#     if isinstance(col_dat_2, pd.core.indexes.base.Index):
-#         col_unique_2 = col_dat_2.unique().values
-#     else:
-#         col_unique_2 = col_dat_2.unique()
-#     n_colours_2 = len(col_unique_2)
-#     if n_colours_2 > 10:
-#         cmap_2 = pl.get_cmap('tab20')
-#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
-#     elif n_colours_2 > 5:
-#         cmap_2 = pl.get_cmap('tab10')
-#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=1, num=n_colours_2))
-#     else:
-#         cmap_2 = pl.get_cmap('tab10')
-#         plot_colours_2 = cmap_2(np.linspace(start=0, stop=0.5, num=n_colours_2))
-#
-#     clr_2 = {col_unique_2[i]: plot_colours_2[i] for i in range(n_colours_2)}
-#
-#     for point in range(dat_tsne.shape[0]):
-#         pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
-#                    color=clr_1[col_dat_1[point]],
-#                    label=col_dat_1[point],
-#                    **pl_kwargs)
-#         pl.scatter(dat_tsne[point, 0], dat_tsne[point, 1],
-#                    color='none',
-#                    edgecolor=clr_2[col_dat_2[point]],
-#                    linewidths=2,
-#                    label=col_dat_2[point],
-#                    s=60,
-#                    **pl_kwargs)
-#     handles, labels = pl.gca().get_legend_handles_labels()
-#     by_label = dict(zip(labels, handles))
-#     pl.title(plot_title)
-#     pl.legend(by_label.values(),
-#               by_label.keys(),
-#               loc='center left',
-#               bbox_to_anchor=(1.0, 0.5))
-#     pl.tight_layout()
-#     pl.show()
 
 
 # %% plots showing data input, copied lots from 2020-09-02_example_images.py
 
 # first grab some example images
 idx = pd.IndexSlice
-dat25_g = r_dat.loc[idx['phip0-5_phir25', 'green'], :]
-dat25_r = r_dat.loc[idx['phip0-5_phir25', 'red'], :]
+dat25_g = r_dat.loc[idx['phip0-5\_phir25', 'green'], :]
+dat25_r = r_dat.loc[idx['phip0-5\_phir25', 'red'], :]
 
-dat75_g = r_dat.loc[idx['phip0-5_phir75', 'green'], :]
-dat75_r = r_dat.loc[idx['phip0-5_phir75', 'red'], :]
+dat75_g = r_dat.loc[idx['phip0-5\_phir75', 'green'], :]
+dat75_r = r_dat.loc[idx['phip0-5\_phir75', 'red'], :]
 
-dat40_g = r_dat.loc[idx['phip0-5_phir40', 'green'], :]
-dat40_r = r_dat.loc[idx['phip0-5_phir40', 'red'], :]
+dat40_g = r_dat.loc[idx['phip0-5\_phir40', 'green'], :]
+dat40_r = r_dat.loc[idx['phip0-5\_phir40', 'red'], :]
 
 
 # now get the cluster labels
-labs25_r = h_labs.loc[idx['phip0-5_phir25', 'red'], :]
+labs25_r = h_labs.loc[idx['phip0-5\_phir25', 'red'], :]
 
-labs25_g = h_labs.loc[idx['phip0-5_phir25', 'green'], :]
+labs25_g = h_labs.loc[idx['phip0-5\_phir25', 'green'], :]
 
-labs75_r = h_labs.loc[idx['phip0-5_phir75', 'red'], :]
-labs75_g = h_labs.loc[idx['phip0-5_phir75', 'green'], :]
+labs75_r = h_labs.loc[idx['phip0-5\_phir75', 'red'], :]
+labs75_g = h_labs.loc[idx['phip0-5\_phir75', 'green'], :]
 
-labs40_r = h_labs.loc[idx['phip0-5_phir40', 'red'], :]
-labs40_g = h_labs.loc[idx['phip0-5_phir40', 'green'], :]
+labs40_r = h_labs.loc[idx['phip0-5\_phir40', 'red'], :]
+labs40_g = h_labs.loc[idx['phip0-5\_phir40', 'green'], :]
 
 
 # now see if the plot works!
@@ -365,7 +297,131 @@ for i in range(dat40_g.shape[0]):
                                   color='w', size=7)
 axs[2, 1].set_title('phip=0.5, phir=40, green')
 
-fig.suptitle('Examples of input data  '+file_suffix[1:])
+fig.suptitle('Examples of input data  '+file_suffix[1:].replace('_', ', '))
+fig.subplots_adjust(hspace=0)
+fig.subplots_adjust(wspace=0)
+pl.tight_layout()
+pl.savefig(graph_folder+'data_eg'+file_suffix+'.png')
+pl.show()
+
+
+# %% small bar plots for individual example images
+
+image_list = ['phip0-5\_phir25green', 'phip0-5\_phir25red',
+              'phip0-5\_phir40green', 'phip0-5\_phir40red',
+              'phip0-5\_phir60green', 'phip0-5\_phir60red']
+h_count
+my_cols = ['#FF2C00', '#00B945', '#FF9500', '#0C5DA5', '#845B97']
+idx = pd.IndexSlice
+for item in image_list:
+    to_plot = h_count.loc[:, idx[:, item]].transpose()
+    to_plot.plot(kind='bar', stacked=True, figsize=(2.5, 7.5), color=my_cols)
+    pl.gca().axes.set_xticklabels([''])
+    pl.gca().axes.spines['bottom'].set_color('white')
+    pl.gca().axes.spines['top'].set_color('white')
+    pl.gca().axes.spines['left'].set_color('white')
+    pl.gca().axes.spines['right'].set_color('white')
+    pl.gca().axes.tick_params(axis='x', colors='white')
+    pl.gca().axes.tick_params(axis='y', colors='white', which='both')
+    pl.gca().axes.yaxis.label.set_color('white')
+    pl.ylabel('Cluster frequency')
+    pl.xlabel('')
+    pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5), labelcolor='white')
+    pl.tight_layout()
+    pl.savefig(graph_folder+'hbar_phi_'+file_suffix+item+'.png', transparent=True)
+    pl.show()
+
+
+# %%
+
+# first grab some example images
+idx = pd.IndexSlice
+dat25_g = r_dat.loc[idx['phip0-5\_phir25', 'green'], :]
+dat25_r = r_dat.loc[idx['phip0-5\_phir25', 'red'], :]
+
+dat75_g = r_dat.loc[idx['phip0-5\_phir40', 'green'], :]
+dat75_r = r_dat.loc[idx['phip0-5\_phir40', 'red'], :]
+
+dat40_g = r_dat.loc[idx['phip0-5\_phir60', 'green'], :]
+dat40_r = r_dat.loc[idx['phip0-5\_phir60', 'red'], :]
+
+
+# now get the cluster labels
+labs25_r = h_labs.loc[idx['phip0-5\_phir25', 'red'], :]
+labs25_g = h_labs.loc[idx['phip0-5\_phir25', 'green'], :]
+
+labs75_r = h_labs.loc[idx['phip0-5\_phir40', 'red'], :]
+labs75_g = h_labs.loc[idx['phip0-5\_phir40', 'green'], :]
+
+labs40_r = h_labs.loc[idx['phip0-5\_phir60', 'red'], :]
+labs40_g = h_labs.loc[idx['phip0-5\_phir60', 'green'], :]
+
+
+# now see if the plot works!
+fig, axs = pl.subplots(3, 2, sharex=True, sharey=True, figsize=(12, 10))
+axs[0, 0].set_aspect('equal')
+axs[0, 0].set_ylabel('slice')
+axs[0, 0].imshow(dat25_r, aspect=5)
+for i in range(dat25_r.shape[0]):
+
+    for j in range(dat25_r.shape[1]):
+        if j % 10 == 0:
+            text = axs[0, 0].text(j, i, labs25_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[0, 0].set_title('phip=0.5, phir=25, red')
+
+axs[1, 0].set_ylabel('slice')
+axs[1, 0].imshow(dat25_g, aspect=5)
+for i in range(dat25_g.shape[0]):
+    for j in range(dat25_g.shape[1]):
+        if j % 10 == 0:
+            text = axs[1, 0].text(j, i, labs25_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[1, 0].set_title('phip=0.5, phir=25, green')
+
+axs[0, 1].imshow(dat75_r, aspect=5)
+for i in range(dat75_r.shape[0]):
+    for j in range(dat75_r.shape[1]):
+        if j % 10 == 0:
+            text = axs[0, 1].text(j, i, labs75_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[0, 1].set_title('phip=0.5, phir=40, red')
+
+axs[1, 1].imshow(dat75_g, aspect=5)
+for i in range(dat75_g.shape[0]):
+    for j in range(dat75_g.shape[1]):
+        if j % 10 == 0:
+            text = axs[1, 1].text(j, i, labs75_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[1, 1].set_title('phip=0.5, phir=40, green')
+
+axs[2, 0].set_ylabel('slice')
+axs[2, 0].set_xlabel('PCA component')
+axs[2, 0].imshow(dat40_r, aspect=5)
+for i in range(dat40_r.shape[0]):
+    for j in range(dat40_r.shape[1]):
+        if j % 10 == 0:
+            text = axs[2, 0].text(j, i, labs40_r.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[2, 0].set_title('phip=0.5, phir=60, red')
+
+axs[2, 1].set_xlabel('PCA component')
+axs[2, 1].imshow(dat40_g, aspect=5)
+for i in range(dat40_g.shape[0]):
+    for j in range(dat40_g.shape[1]):
+        if j % 10 == 0:
+            text = axs[2, 1].text(j, i,
+                                  labs40_g.loc[i].values[0][0],
+                                  ha='center', va='center',
+                                  color='w', size=7)
+axs[2, 1].set_title('phip=0.5, phir=60, green')
+
+fig.suptitle('Examples of input data  '+file_suffix[1:].replace('_', ', '))
 fig.subplots_adjust(hspace=0)
 fig.subplots_adjust(wspace=0)
 pl.tight_layout()
