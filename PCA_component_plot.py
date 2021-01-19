@@ -51,23 +51,26 @@ pca_extra_comps_toplot = pca_extra_comps.T.set_index(['theta', 'r'])
 if input('Make example PCA image? y/n: ')=='y':
     variances = [0.99, 0.97, 0.95, 0.92, 0.9, 0.8, 0.7, 0.5]
     n = len(variances)+1
+    # with pl.style.context(['thesis_wide']):
     pl.subplot(1, n, 1)
     pl.imshow(r_dat.iloc[0].to_numpy().reshape(273, 100))
-    pl.xlabel('27300 components')
+    pl.xlabel('27300\ncomponents')
     pl.title('Original image')
 
     i = 2
-    with pl.style.context(['thesis_wide']):
-        for var in variances:
-            pca = PCA(var)
-            transformed = pca.fit_transform(r_dat)
-            approximation = pca.inverse_transform(transformed)
-            pl.subplot(1, n, i)
-            pl.imshow(approximation[0].reshape(273, 100))
-            pl.xlabel(str(pca.n_components_) + ' components')
-            pl.title(str(var*100) + '% variance')
-            i = i+1
+
+    for var in variances:
+        pca = PCA(var)
+        transformed = pca.fit_transform(r_dat)
+        approximation = pca.inverse_transform(transformed)
+        pl.subplot(1, n, i)
+        pl.imshow(approximation[0].reshape(273, 100))
+        pl.xlabel(str(pca.n_components_) + '\ncomponents')
+        pl.title(str(var*100) + '% variance')
+        i = i+1
     # pl.suptitle('Impact of PCA on an example image')
+    pl.gcf().set_size_inches(10.5, 7)
+    pl.tight_layout()
     pl.show()
 
 
@@ -77,17 +80,25 @@ if input('Make time graph? y/n: ')=='y':
     variances_time = [0.99, 0.97, 0.95, 0.92, 0.9, 0.8, 0.7, 0.5]
     h_times = []
     k_times = []
+    h_times_mean = []
+    k_times_mean = []
+    h_times_stdev = []
+    k_times_stdev = []
     x = []
 
-    h_time_orig = timeit.repeat(lambda: clust('h', r_dat, 5),
-                                repeat=5,
-                                number=10)
+    h_time_orig = timeit.repeat(lambda: clust('h', r_dat, 5, random=False),
+                                repeat=10,
+                                number=5)
     h_times.append(min(h_time_orig))
+    h_times_mean.append(np.mean(h_time_orig))
+    h_times_stdev.append(np.std(h_time_orig))
 
-    k_time_orig = timeit.repeat(lambda: clust('k', r_dat, 5),
-                                repeat=5,
-                                number=10)
+    k_time_orig = timeit.repeat(lambda: clust('k', r_dat, 5, random=True),
+                                repeat=10,
+                                number=5)
     k_times.append(min(k_time_orig))
+    k_times_mean.append(np.mean(k_time_orig))
+    k_times_stdev.append(np.std(k_time_orig))
     x.append(1.0)
 
     for var in variances_time:
@@ -95,26 +106,76 @@ if input('Make time graph? y/n: ')=='y':
         transformed = pca.fit_transform(r_dat)
         approximation = pca.inverse_transform(transformed)
         approx_dat = pd.DataFrame(approximation, index=r_dat.index)
-        h_time_PCA = timeit.repeat(lambda: clust('h', approx_dat, 5),
-                                   repeat=5,
-                                   number=10)
+        h_time_PCA = timeit.repeat(lambda: clust('h', approx_dat,
+                                                 5, random=True),
+                                   repeat=10,
+                                   number=5)
         h_times.append(min(h_time_PCA))
-        k_time_PCA = timeit.repeat(lambda: clust('k', approx_dat, 5),
-                                   repeat=5,
-                                   number=10)
+        h_times_mean.append(np.mean(h_time_PCA))
+        h_times_stdev.append(np.std(h_time_PCA))
+
+        k_time_PCA = timeit.repeat(lambda: clust('k', approx_dat,
+                                                 5, random=True),
+                                   repeat=10,
+                                   number=5)
         k_times.append(min(k_time_PCA))
+        k_times_mean.append(np.mean(k_time_PCA))
+        k_times_stdev.append(np.std(k_time_PCA))
         x.append(var)
 
+    x = np.array(x)
+    h_times = np.array(h_times)
+    var100 = x == 1.0
+    var99 = x == 0.99
+    var97 = x == 0.97
+    var50 = x == 0.5
 
-    pl.plot(x, h_times, '-o')
+    pl.scatter(x[var100], h_times[var100])
+    pl.scatter(x[var99], h_times[var99])
+    pl.scatter(x[var97], h_times[var97])
+    pl.scatter(x[var50], h_times[var50])
+    pl.plot(x, h_times, '-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Time taken for 10 runs')
+    pl.ylabel('Min time taken for 5 runs (s)')
     pl.title('Hierarchical clustering')
     pl.show()
 
-    pl.plot(x, k_times, '-o')
+    k_times = np.array(k_times)
+
+    pl.scatter(x[var100], k_times[var100])
+    pl.scatter(x[var99], k_times[var99])
+    pl.scatter(x[var97], k_times[var97])
+    pl.scatter(x[var50], k_times[var50])
+    pl.plot(x, k_times, '-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Time taken for 10 runs')
+    pl.ylabel('Min time taken for 5 runs (s)')
+    pl.title('K-means clustering')
+    pl.show()
+    h_times_mean = np.array(h_times_mean)
+    pl.scatter(x[var100], h_times_mean[var100])
+    pl.scatter(x[var99], h_times_mean[var99])
+    pl.scatter(x[var97], h_times_mean[var97])
+    pl.scatter(x[var50], h_times_mean[var50])
+    pl.errorbar(x, h_times_mean,
+                xerr=None, yerr=h_times_stdev,
+                fmt='-o', color='#474747', zorder=-1)
+    pl.xlabel('Variance retained in PCA')
+    pl.ylabel('Mean time taken for 5 runs (s)')
+    pl.title('Hierarchical clustering')
+    pl.show()
+
+    k_times_mean = np.array(k_times_mean)
+
+    pl.scatter(x[var100], k_times_mean[var100])
+    pl.scatter(x[var99], k_times_mean[var99])
+    pl.scatter(x[var97], k_times_mean[var97])
+    pl.scatter(x[var50], k_times_mean[var50])
+    pl.errorbar(x, k_times_mean,
+                xerr=None, yerr=k_times_stdev,
+                fmt='-o', color='#474747', zorder=-1)
+    pl.xlabel('Variance retained in PCA')
+    pl.xlabel('Variance retained in PCA')
+    pl.ylabel('Mean time taken for 5 runs (s)')
     pl.title('K-means clustering')
     pl.show()
 

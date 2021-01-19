@@ -517,7 +517,9 @@ def tSNE_transform(dat, p, r_state=0):
 
 
 # functions for clustering that all return the output of count_clusters_________
-def hier(dat, n_clust, show_dendro=False, seed=1234):
+def hier(dat, n_clust, show_dendro=False, random=False, seed=1234):
+    if random:
+        seed=None
     np.random.seed(seed)
     h = h_cluster(dat, n_clust, showPlot=show_dendro)
     h.index = dat.index
@@ -528,7 +530,9 @@ def hier(dat, n_clust, show_dendro=False, seed=1234):
     return h, h_count
 
 
-def kmeans(dat, n_clust, col_name, seed=1234):
+def kmeans(dat, n_clust, col_name, random=False, seed=1234):
+    if random:
+        seed=None
     np.random.seed(seed)
     km = cluster.KMeans(n_clusters=n_clust)
     km_fit = km.fit(dat)
@@ -540,12 +544,12 @@ def kmeans(dat, n_clust, col_name, seed=1234):
     return labs, k_count
 
 
-def clust(method, dat, n_clust, col_name="", seed=1234):
+def clust(method, dat, n_clust, col_name="", random=False, seed=1234):
     if method == 'h':
-        count = hier(dat, n_clust, False, seed)
+        count = hier(dat, n_clust, False, random, seed)
 
     elif method == 'k':
-        count = kmeans(dat, n_clust, col_name, seed)
+        count = kmeans(dat, n_clust, col_name, random, seed)
     else:
         print('Invalid method input. Use \'h\' for hierarchical clustering or \'k\' for k-means clustering.')
     return count
