@@ -708,8 +708,10 @@ def phi_plot(cluster_dat, plot_col_name, plot_title, save_file=None):
     handles, labels = pl.gca().get_legend_handles_labels()
     by_label = dict(zip(labels, handles))
     pl.title(plot_title+'\n(size indicates number of points in that position)')
-    pl.xlabel('phi_p')
-    pl.ylabel('phi_r')
+    pl.xlim(0.2, 1.2)
+    pl.ylim(0, 90)
+    pl.xlabel('phi\_p')
+    pl.ylabel('phi\_r')
     leg = pl.legend(by_label.values(),
                     by_label.keys(),
                     loc='center left',

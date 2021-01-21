@@ -1,12 +1,14 @@
-from full_analysis_tools import read_files, format_rectangles, PCA_transform, clust, gini_score_range
+from full_analysis_tools import read_files, format_rectangles, PCA_transform, clust, gini_score_range, read_calc_format_wedges
 import matplotlib.pyplot as pl
 import pandas as pd
 import numpy as np
 import timeit
 from sklearn.decomposition import PCA
+import os
 import matplotlib
 matplotlib.style.core.reload_library()
 pl.style.use('thesis')
+
 
 graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/'
 
@@ -19,6 +21,20 @@ dat.head()
 
 r_dat = format_rectangles(dat, scale='standard', theta_av=False)
 r_dat.head()
+
+wedge_path = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/'
+
+
+info_file = os.path.join(wedge_path, 'stack_info.csv')
+save_file = os.path.join(wedge_path, 'wedges_all')+'.pkl'
+wedges = read_calc_format_wedges(scale='standard',
+                                 fileName=save_file,
+                                 reslice=True,
+                                 imPath=imagePath,
+                                 infoFile=info_file,
+                                 hp=False)
+r_dat = r_dat[r_dat.index.isin(wedges.index)]
+
 pca99, pca_dat99 = PCA_transform(r_dat, 0.99)
 
 pca97, pca_dat97 = PCA_transform(r_dat, 0.97)
@@ -48,7 +64,7 @@ pca_extra_comps_toplot = pca_extra_comps.T.set_index(['theta', 'r'])
 
 # %% plot to show how variance changes the image reconstruction
 # from PCA_droplets.py
-if input('Make example PCA image? y/n: ')=='y':
+if input('Make example PCA image? y/n: ') == 'y':
     variances = [0.99, 0.97, 0.95, 0.92, 0.9, 0.8, 0.7, 0.5]
     n = len(variances)+1
     # with pl.style.context(['thesis_wide']):
@@ -76,7 +92,7 @@ if input('Make example PCA image? y/n: ')=='y':
 
 # %% plot to show how the time to run clustering changes with PCA
 
-if input('Make time graph? y/n: ')=='y':
+if input('Make time graph? y/n: ') == 'y':
     variances_time = [0.99, 0.97, 0.95, 0.92, 0.9, 0.8, 0.7, 0.5]
     h_times = []
     k_times = []
