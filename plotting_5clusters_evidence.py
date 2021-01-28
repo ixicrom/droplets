@@ -1,19 +1,37 @@
 from full_analysis_tools import read_files, format_rectangles, read_calc_format_wedges, clust, optimalK, gini_score, PCA_transform
+from data_tools import norm_data
 import matplotlib.pyplot as pl
 import os
 import numpy as np
+import glob
+import pandas as pd
 import matplotlib
 matplotlib.style.core.reload_library()
+pl.style.use('thesis')
 
 graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/'
 
 # %% rectangular/theta-averaged data
-filePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+filePath_um = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles_final'
 imagePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/'
 
-dat = read_files(filePath)
+# dat = read_files(filePath)
+dat_list = []
+for file in glob.glob(os.path.join(filePath_um,'*.pkl')):
+    dat_list.append(pd.read_pickle(file))
+dat = pd.concat(dat_list, axis=1)
+print(dat.head())
 
-r_dat_theta = format_rectangles(dat, scale='standard', theta_av=True)
+file_suffix = ''
+if input('Scale each slice to between 0 and 1? y/n: ') == 'y':
+    dat_scaled = norm_data(dat)
+    dat = dat_scaled
+    file_suffix += '_slices-scaled'
+dat = dat.dropna()
+print(dat.shape)
+print(dat.head())
+
+r_dat_theta = format_rectangles(dat, scale='standard', theta_av=True, rCol=dat.columns[0])
 
 r_dat_rect = format_rectangles(dat, scale='standard', theta_av=False)
 
@@ -21,6 +39,8 @@ r_dat_rect = format_rectangles(dat, scale='standard', theta_av=False)
 # %% calculate wedge data
 wedge_path = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/'
 
+info_file = os.path.join(wedge_path, 'stack_info.csv')
+save_file = os.path.join(wedge_path, 'wedges')+'.pkl'
 
 info_file_A = os.path.join(wedge_path, 'stack_info_2020-08-28_A.csv')
 save_file_A = os.path.join(wedge_path, 'wedges_A')+'.pkl'
@@ -29,37 +49,33 @@ save_file_A = os.path.join(wedge_path, 'wedges_A')+'.pkl'
 info_file_B = os.path.join(wedge_path, 'stack_info_2020-08-28_B.csv')
 save_file_B = os.path.join(wedge_path, 'wedges_B')+'.pkl'
 
-if input('Calculate wedges from scratch? y/n: ') == 'y':
-    wedges_A = read_calc_format_wedges(scale='minmax',
-                                       fileName=save_file_A,
-                                       reslice=True,
-                                       imPath=imagePath,
-                                       infoFile=info_file_A,
-                                       hp=False)
-    wedges_B = read_calc_format_wedges(scale='minmax',
-                                       fileName=save_file_B,
-                                       reslice=True,
-                                       imPath=imagePath,
-                                       infoFile=info_file_B,
-                                       hp=False)
+wedges = read_calc_format_wedges(scale='standard',
+                                 fileName=save_file,
+                                 reslice=True,
+                                 imPath=imagePath,
+                                 infoFile=info_file,
+                                 hp=False)
+wedges_A = read_calc_format_wedges(scale='standard',
+                                   fileName=save_file_A,
+                                   reslice=True,
+                                   imPath=imagePath,
+                                   infoFile=info_file_A,
+                                   hp=False)
+wedges_B = read_calc_format_wedges(scale='standard',
+                                   fileName=save_file_B,
+                                   reslice=True,
+                                   imPath=imagePath,
+                                   infoFile=info_file_B,
+                                   hp=False)
 
-else:
-    wedges_A = read_calc_format_wedges(scale='minmax',
-                                       fileName=save_file_A,
-                                       reslice=False,
-                                       hp=False)
 
-    wedges_B = read_calc_format_wedges(scale='minmax',
-                                       fileName=save_file_B,
-                                       reslice=False,
-                                       hp=False)
-
+r_dat = r_dat_rect[r_dat_rect.index.isin(wedges.index)]
 r_dat_oneA = r_dat_rect[r_dat_rect.index.isin(wedges_A.index)]
 r_dat_oneB = r_dat_rect[r_dat_rect.index.isin(wedges_B.index)]
 
 r_dat_oneA = PCA_transform(r_dat_oneA, 0.99)[1]
 r_dat_oneB = PCA_transform(r_dat_oneB, 0.99)[1]
-r_dat_pca = PCA_transform(r_dat_rect, 0.99)[1]
+r_dat_pca = PCA_transform(r_dat, 0.99)[1]
 
 
 # %% gini score plots
@@ -93,7 +109,7 @@ if input('Make gini score plot? y/n: ') == 'y':
     pl.ylabel('Gini score')
     pl.title('Gini score for hierchical clustering', loc='center', wrap=True)
     pl.vlines(5, 0, 0.35, linestyles='dashed', colors='k')
-    pl.savefig(graph_folder+'gini_method_overview.png')
+    pl.savefig(graph_folder+'gini_method_overview_um'+file_suffix+'.png')
     pl.show()
 
 # %% gap statistic plots
@@ -131,6 +147,6 @@ if input('Make gap statistic plot? y/n: ') == 'y':
     pl.title('Gap statistic for k-means clustering', wrap=True)
     pl.legend(loc='upper left')
     pl.vlines(5, 0, 1.75, linestyles='dashed', colors='k')
-    pl.savefig(graph_folder+'gap_method_overview.png', bbox_inches='tight')
+    pl.savefig(graph_folder+'gap_method_overview_um'+file_suffix+'.png', bbox_inches='tight')
     pl.tight_layout()
     pl.show()

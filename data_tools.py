@@ -1,7 +1,7 @@
 import pandas as pd
 from sklearn import preprocessing
 from scipy.cluster.hierarchy import dendrogram, linkage
-import matplotlib.pyplot as plt
+import matplotlib.pyplot as pl
 from scipy.cluster import hierarchy
 import numpy as np
 
@@ -13,7 +13,7 @@ def norm_data(data, colms = ['val_green','val_red']):
     data.loc[:,idx[:,colms]] = x_scaled
     return data
 
-def theta_average(data, rCol = []):
+def theta_average(data, rCol=[]):
     # remove a dimension by averaging over theta
     idx=pd.IndexSlice
     if rCol == []:
@@ -34,17 +34,23 @@ def theta_average(data, rCol = []):
     return data_mean_all
 
 
-def h_cluster(dat_forLearning, cut_num, showPlot = True):
+def h_cluster(dat_forLearning, cut_num, showPlot = True, plot_suffix=None):
     Z = linkage(dat_forLearning, method='ward', optimal_ordering=True)
     if showPlot:
         mydendro = dendrogram(Z, labels=dat_forLearning.index, truncate_mode='lastp')
-        plt.savefig('dendro.png')
-        plt.show()
-    Z_cut = hierarchy.cut_tree(Z, n_clusters = cut_num)
+        pl.tick_params(axis='x', labelbottom=False)
+        if plot_suffix != None:
+            pl.title('Hierarchical clustering dendrogram'+plot_suffix.replace('_', ', '))
+            pl.savefig('/Users/s1101153/Desktop/dendrograms/dendro'+plot_suffix+'.png')
+        else:
+            print('No file name supplied, saving as dendro.png')
+            pl.savefig('/Users/s1101153/Desktop/dendrograms/dendro.png')
+        pl.show()
+    Z_cut = hierarchy.cut_tree(Z, n_clusters=cut_num)
 
     # get the leaf labels out and make df for output
     Z_leaves = hierarchy.leaves_list(Z)
-    Z_leaves=dat_forLearning.index[Z_leaves]
+    Z_leaves = dat_forLearning.index[Z_leaves]
     Z_results = pd.DataFrame([Z_leaves, Z_cut]).transpose()
 
     images = Z_results[0].values

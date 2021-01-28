@@ -1,4 +1,5 @@
 from full_analysis_tools import read_files, format_rectangles, PCA_transform, clust, gini_score_range, read_calc_format_wedges
+from data_tools import norm_data
 import matplotlib.pyplot as pl
 import pandas as pd
 import numpy as np
@@ -6,6 +7,7 @@ import timeit
 from sklearn.decomposition import PCA
 import os
 import matplotlib
+import glob
 matplotlib.style.core.reload_library()
 pl.style.use('thesis')
 
@@ -13,11 +15,19 @@ pl.style.use('thesis')
 graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/'
 
 # %% rectangular/theta-averaged data
-filePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+filePath_um = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles_final'
 imagePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/'
 
-dat = read_files(filePath)
-dat.head()
+# dat = read_files(filePath)
+dat_list = []
+for file in glob.glob(os.path.join(filePath_um,'*.pkl')):
+    dat_list.append(pd.read_pickle(file))
+dat = pd.concat(dat_list, axis=1)
+
+# if input('Scale each slice to between 0 and 1? y/n: ') == 'y':
+#     dat_scaled = norm_data(dat)
+#     dat = dat_scaled
+dat = dat.dropna()
 
 r_dat = format_rectangles(dat, scale='standard', theta_av=False)
 r_dat.head()
@@ -65,13 +75,13 @@ pca_extra_comps_toplot = pca_extra_comps.T.set_index(['theta', 'r'])
 # %% plot to show how variance changes the image reconstruction
 # from PCA_droplets.py
 if input('Make example PCA image? y/n: ') == 'y':
-    variances = [0.99, 0.97, 0.95, 0.92, 0.9, 0.8, 0.7, 0.5]
+    variances = [0.99, 0.97, 0.95, 0.9, 0.8, 0.7, 0.5]
     n = len(variances)+1
     # with pl.style.context(['thesis_wide']):
     pl.subplot(1, n, 1)
-    pl.imshow(r_dat.iloc[0].to_numpy().reshape(273, 100))
-    pl.xlabel('27300\ncomponents')
-    pl.title('Original image')
+    pl.imshow(r_dat.iloc[0].to_numpy().reshape(146, 100), aspect=2)
+    pl.xlabel('14600\ncomponents')
+    pl.title('Original\nimage')
 
     i = 2
 
@@ -80,12 +90,13 @@ if input('Make example PCA image? y/n: ') == 'y':
         transformed = pca.fit_transform(r_dat)
         approximation = pca.inverse_transform(transformed)
         pl.subplot(1, n, i)
-        pl.imshow(approximation[0].reshape(273, 100))
+        pl.imshow(approximation[0].reshape(146, 100), aspect=2)
+        pl.tick_params(axis='y', labelbottom=False)
         pl.xlabel(str(pca.n_components_) + '\ncomponents')
-        pl.title(str(var*100) + '% variance')
+        pl.title(str(var*100) + '%' + '\nvariance')
         i = i+1
     # pl.suptitle('Impact of PCA on an example image')
-    pl.gcf().set_size_inches(10.5, 7)
+    pl.gcf().set_size_inches(14, 5.25)
     pl.tight_layout()
     pl.show()
 
@@ -103,15 +114,15 @@ if input('Make time graph? y/n: ') == 'y':
     x = []
 
     h_time_orig = timeit.repeat(lambda: clust('h', r_dat, 5, random=False),
-                                repeat=10,
-                                number=5)
+                                repeat=5,
+                                number=10)
     h_times.append(min(h_time_orig))
     h_times_mean.append(np.mean(h_time_orig))
     h_times_stdev.append(np.std(h_time_orig))
 
     k_time_orig = timeit.repeat(lambda: clust('k', r_dat, 5, random=True),
-                                repeat=10,
-                                number=5)
+                                repeat=5,
+                                number=10)
     k_times.append(min(k_time_orig))
     k_times_mean.append(np.mean(k_time_orig))
     k_times_stdev.append(np.std(k_time_orig))
@@ -124,16 +135,16 @@ if input('Make time graph? y/n: ') == 'y':
         approx_dat = pd.DataFrame(approximation, index=r_dat.index)
         h_time_PCA = timeit.repeat(lambda: clust('h', approx_dat,
                                                  5, random=True),
-                                   repeat=10,
-                                   number=5)
+                                   repeat=5,
+                                   number=10)
         h_times.append(min(h_time_PCA))
         h_times_mean.append(np.mean(h_time_PCA))
         h_times_stdev.append(np.std(h_time_PCA))
 
         k_time_PCA = timeit.repeat(lambda: clust('k', approx_dat,
                                                  5, random=True),
-                                   repeat=10,
-                                   number=5)
+                                   repeat=5,
+                                   number=10)
         k_times.append(min(k_time_PCA))
         k_times_mean.append(np.mean(k_time_PCA))
         k_times_stdev.append(np.std(k_time_PCA))
@@ -152,7 +163,7 @@ if input('Make time graph? y/n: ') == 'y':
     pl.scatter(x[var50], h_times[var50])
     pl.plot(x, h_times, '-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Min time taken for 5 runs (s)')
+    pl.ylabel('Min time taken per run (s)')
     pl.title('Hierarchical clustering')
     pl.show()
 
@@ -164,7 +175,7 @@ if input('Make time graph? y/n: ') == 'y':
     pl.scatter(x[var50], k_times[var50])
     pl.plot(x, k_times, '-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Min time taken for 5 runs (s)')
+    pl.ylabel('Min time taken per run (s)')
     pl.title('K-means clustering')
     pl.show()
     h_times_mean = np.array(h_times_mean)
@@ -176,7 +187,7 @@ if input('Make time graph? y/n: ') == 'y':
                 xerr=None, yerr=h_times_stdev,
                 fmt='-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Mean time taken for 5 runs (s)')
+    pl.ylabel('Mean time taken per run (s)')
     pl.title('Hierarchical clustering')
     pl.show()
 
@@ -191,7 +202,7 @@ if input('Make time graph? y/n: ') == 'y':
                 fmt='-o', color='#474747', zorder=-1)
     pl.xlabel('Variance retained in PCA')
     pl.xlabel('Variance retained in PCA')
-    pl.ylabel('Mean time taken for 5 runs (s)')
+    pl.ylabel('Mean time taken per run (s)')
     pl.title('K-means clustering')
     pl.show()
 

@@ -151,6 +151,11 @@ def rectangle_slice(imFile,
         print('File saved:' + str(saveFile))
     return slice_df
 
+
+def scale_array(A):
+    return (A-np.min(A))/(np.max(A) - np.min(A))
+
+
 def rectangle_slice_um(imFile,
                        um,
                        L,
@@ -162,9 +167,11 @@ def rectangle_slice_um(imFile,
                        r_max_um=None,
                        savePath=None):
     imArr = io.imread(imFile)
-    imArr.shape
-    imGreen = imArr[:, :, 0]
-    imRed = imArr[:, :, 1]
+    # imArr.shape
+    imGreen = scale_array(imArr[:, :, 0])
+    print(np.max(imArr[:, :, 0]))
+    print(np.max(imGreen))
+    imRed = scale_array(imArr[:, :, 1])
 
     pixel_um = L/um  # conversion from microns to pixels
 
@@ -172,10 +179,10 @@ def rectangle_slice_um(imFile,
     C_x = C_x_um*pixel_um
     C_y = C_y_um*pixel_um
 
-    if r_min_um is None or r_min < 0:
+    if r_min_um is None or r_min_um < 0:
         r_min_um = 0
     if r_max_um is None or r_max_um > um-max(C_x_um, C_y_um):
-        r_max = um-max(C_x_um, C_y_um)
+        r_max_um = um-max(C_x_um, C_y_um)
     slices = []  # list to add results to
     keys = []
     for slice in range(n_slices):
@@ -191,7 +198,7 @@ def rectangle_slice_um(imFile,
 
         samp = path.split(imFile)[1][:-10]
         keys.append(samp+'_slice'+str(slice))
-        for r_um in np.arange(start=r_min, stop=r_max, step=0.1):
+        for r_um in np.arange(start=r_min_um, stop=r_max_um, step=0.1):
             r = r_um*pixel_um
             for i in range(n_theta):  # loop through theta values
                 theta = 2*math.pi/n_slices * i/n_theta  # theta for output, values from 0 to 2pi/n_slices
@@ -204,8 +211,8 @@ def rectangle_slice_um(imFile,
                 # append values to arrays
                 theta_dat.append(theta)
                 r_dat.append(r_um)
-                val_dat_g.append(imGreen[int(round(x)), int(round(y))])
-                val_dat_r.append(imRed[int(round(x)), int(round(y))])
+                val_dat_g.append(imGreen[int(round(x))-1, int(round(y))-1])
+                val_dat_r.append(imRed[int(round(x))-1, int(round(y))-1])
                 sample_name.append(samp)
                 slice_num.append(slice)
 
@@ -221,19 +228,18 @@ def rectangle_slice_um(imFile,
     if savePath is not None:
         saveName = path.split(imFile)[1][:-4]+'_rectangle_slices.pkl'
         saveFile = path.join(savePath, saveName)
-        slice_df.to_pickle(saveFile)
+        slice_df_um.to_pickle(saveFile)
         print('File saved:' + str(saveFile))
-    return slice_df
-
+    return slice_df_um
 
 
 def slice_info_file_um(infoFile,
-                    imPath,
-                    n_slice,
-                    n_theta,
-                    r_min=None,
-                    r_max=None,
-                    savePath=None):
+                       imPath,
+                       n_slice,
+                       n_theta,
+                       r_min_um=None,
+                       r_max_um=None,
+                       savePath=None):
     f = open(infoFile, 'r')
     all_slices = []
     for line in f.readlines():
@@ -244,17 +250,17 @@ def slice_info_file_um(infoFile,
             pxSize = int(vals[2])
             Cx = float(vals[4])
             Cy = float(vals[3])
-            n_slice = 12
-            im_slices = rectangle_slice(imFile=imFile,
-                                        um=umSize,
-                                        L=pxSize,
-                                        C_x_um=Cx,
-                                        C_y_um=Cy,
-                                        n_slices=n_slice,
-                                        n_theta=n_theta,
-                                        r_min=r_min,
-                                        r_max=r_max,
-                                        savePath=savePath)
+            # n_slice = 12
+            im_slices = rectangle_slice_um(imFile=imFile,
+                                           um=umSize,
+                                           L=pxSize,
+                                           C_x_um=Cx,
+                                           C_y_um=Cy,
+                                           n_slices=n_slice,
+                                           n_theta=n_theta,
+                                           r_min_um=r_min_um,
+                                           r_max_um=r_max_um,
+                                           savePath=savePath)
             all_slices.append(im_slices)
 
     return pd.concat(all_slices, axis=1).dropna()
@@ -276,7 +282,7 @@ def slice_info_file(infoFile,
             Cx = float(vals[4])
             Cy = float(vals[3])
             r_max_um = float(vals[7])
-            n_slice = 12
+            # n_slice = 12
             im_slices = rectangle_slice_um(imFile=imFile,
                                            um=umSize,
                                            L=pxSize,
@@ -305,7 +311,7 @@ def read_rectangle_folder(folderName):
 
 
 # functions for getting data in desired format___________________________
-def format_rectangles(dat, scale, theta_av=True,r_av=False):
+def format_rectangles(dat, scale, theta_av=True, r_av=False, rCol=[]):
     '''
     Reformats dataframe (as output from rectangle_slice or slice_tools.read_file) ready for clustering.
     Initial format:
@@ -351,7 +357,7 @@ def format_rectangles(dat, scale, theta_av=True,r_av=False):
     idx = pd.IndexSlice
 
     if theta_av:
-        dat = theta_average(dat).transpose()
+        dat = theta_average(dat, rCol = rCol).transpose()
     elif r_av:
         idx = pd.IndexSlice
         thetaCol = dat.columns[2]
@@ -517,11 +523,11 @@ def tSNE_transform(dat, p, r_state=0):
 
 
 # functions for clustering that all return the output of count_clusters_________
-def hier(dat, n_clust, show_dendro=False, random=False, seed=1234):
+def hier(dat, n_clust, show_dendro=False, plot_suffix=None, random=False, seed=1234):
     if random:
         seed=None
     np.random.seed(seed)
-    h = h_cluster(dat, n_clust, showPlot=show_dendro)
+    h = h_cluster(dat, n_clust, showPlot=show_dendro, plot_suffix=plot_suffix)
     h.index = dat.index
     h_count = count_clusters(h.reset_index(),
                              counter='Cluster_hier',

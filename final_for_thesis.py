@@ -1,25 +1,43 @@
 from full_analysis_tools import read_files, format_rectangles, read_calc_format_wedges, hier, clust, gini_score_range, optimalK, tSNE_transform, gini_score, phi_plot, PCA_transform, tSNE_transform, tSNE_plot_2col
+from data_tools import norm_data
 import matplotlib.pyplot as pl
 import os
 import numpy as np
 import time
 import pandas as pd
+import glob
 from sklearn.preprocessing import StandardScaler
 import matplotlib
 matplotlib.style.core.reload_library()
 pl.style.use('thesis')
 
 
-graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/wedges_standard_not_minmax/'
+graph_folder = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP/Graphs/final_for_thesis/micron_scale/'
 
 # %% rectangular/theta-averaged data
-filePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+# filePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles'
+filePath_um = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/rect_pickles_final'
 imagePath = '/Users/s1101153/OneDrive - University of Edinburgh/Files/OCP_working/droplet_stacks/63x/final_images/ims_to_read/'
 
-dat = read_files(filePath)
+# dat = read_files(filePath)
+# dat
+dat_list = []
+for file in glob.glob(os.path.join(filePath_um,'*.pkl')):
+    dat_list.append(pd.read_pickle(file))
+dat = pd.concat(dat_list, axis=1)
+rCol = dat.columns[0]
 file_suffix = ''
+
+if input('Scale each slice to between 0 and 1? y/n: ') == 'y':
+    dat_scaled = norm_data(dat)
+    dat = dat_scaled
+    file_suffix += '_slices-scaled'
+dat = dat.dropna()
+print(dat.shape)
+print(dat.describe())
+
 if input('Use theta-averaged data? y/n: ') == 'y':
-    r_dat = format_rectangles(dat, scale='standard', theta_av=True)
+    r_dat = format_rectangles(dat, scale='standard', theta_av=True, rCol=rCol)
     file_suffix += '_th-av'
     print(r_dat.head())
 else:
@@ -149,7 +167,7 @@ k_labs, k_count = clust(method='k',
                         n_clust=5,
                         dat=r_dat)
 
-k_count.transpose().plot(kind='bar', stacked=True, figsize=(7, 10.5))
+k_count.transpose().plot(kind='bar', stacked=True, figsize=(10.5, 7))
 pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
@@ -162,15 +180,15 @@ k_gini = gini_score(k_count)
 print('kmeans_gini'+file_suffix+': '+str(np.mean(k_gini)))
 
 dendro = input('Show dendrogram? y/n: ') == 'y'
-h_labs, h_count = hier(r_dat, 5, show_dendro=dendro)
+h_labs, h_count = hier(r_dat, 5, show_dendro=dendro, plot_suffix=file_suffix)
 h_gini = gini_score(h_count)
 print('hier_gini'+file_suffix+': '+str(np.mean(h_gini)))
 
-h_count.transpose().plot(kind='bar', stacked=True, figsize=(7, 10.5))#todo: make plot shorter or wider and/or axis labels smaller
+h_count.transpose().plot(kind='bar', stacked=True, figsize=(10.5, 7))
 pl.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 pl.xlabel('Original image')
 pl.ylabel('Cluster frequency')
-pl.title('Hierarchical clusters'+file_suffix.replace('_', '\_'))
+pl.title('Hierarchical clusters'+file_suffix.replace('_', ', '))
 pl.tight_layout()
 pl.savefig(graph_folder+'hier_bar'+file_suffix+'.png')
 pl.show()
